@@ -3,11 +3,11 @@ import react, { useEffect, useState } from 'react'
 const EditBudget = ({closeModal, data}) => {
 
   const [amount, setAmount] = useState(data.budget || '');
-  const [currency, setCurrency] = useState('EUR');
+  const [currency, setCurrency] = useState(data.mainCurrency);
 
   const handleSaveButton = () => {
 
-    data.API.saveBudget(amount)
+    data.API.saveBudget(amount, currency)
 
     closeModal()
   }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { formatCurrency, formatNumberNoCurrency, getSVGForCategory } from '../../JS/Utils.js'
+import { convertAndCalculatePercentageOfTotal, formatCurrency, formatNumberNoCurrency, getSVGForCategory, sumAndConvertItems } from '../../JS/Utils.js'
 import CircularProgressBar from './CircularProgressBar'
 import { useNavigate } from 'react-router-dom'
 import { useLocation } from "react-router-dom";
@@ -59,16 +59,10 @@ const TransactionsContainer = ({ currencyName, monthlyBudget }) => {
   }
 
   const handleIncomeClick = (income, index) => {
-    navigate(`/add`, { state: { income, index, type:'Income', editing: true, index} })
+    navigate(`/add`, { state: { income, type:'Income', editing: true, index} })
   }
 
-  const calculatePercentageOfTotal = (items, totalExpenses) => {
-    var sum = 0
-    items.forEach(item => {
-      sum += (isNaN(+item[1]) ? 0 : +item[1])
-    })
-    return (sum * 100 / data.totalSpent).toFixed(0)
-  }
+
 
   return (
     <div className='bg-white w-full h-[65%] rounded-t-[4rem] flex flex-col items-center'>
@@ -84,8 +78,9 @@ const TransactionsContainer = ({ currencyName, monthlyBudget }) => {
 
           Object.entries(data.expenses).map(([category, items]) => {
             const imgSrc = getSVGForCategory(category);
-            const totalAmount = formatCurrency(sumUpItems(items), currencyName);
-            const percentageOfTotal = calculatePercentageOfTotal(items, data.expenses);
+            const totalAmount = formatCurrency(sumAndConvertItems(items, data.mainCurrency, data.currencyTable), data.mainCurrency);
+            // const percentageOfTotal = calculatePercentageOfTotal(items, data.expenses);
+            const percentageOfTotal = convertAndCalculatePercentageOfTotal(items, data.mainCurrency, data.currencyTable, data.totalSpent);
             const transactionCount = countTransactions(items);
 
             return (

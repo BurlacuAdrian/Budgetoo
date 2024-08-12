@@ -18,7 +18,9 @@ const HeroSection = () => {
   const [currencySymbol, setCurrencySymbol] = useState('$')
   const [progress, setProgress] = useState(70)
   const currencyName = "EUR"
-  const [displayedTotal, setDisplayedTotal] = useState(formatCurrency((data?.totalSpent || 1234), currencyName))
+  //  const [displayedTotal, setDisplayedTotal] = useState(formatCurrency((data?.totalSpent || 1234), currencyName))
+
+  const [displayedTotal, setDisplayedTotal] = useState(formatCurrency(formatCurrency(data.totalSpent, data.mainCurrency)))
   //TODO
 
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false)
@@ -28,8 +30,9 @@ const HeroSection = () => {
   }
 
   useEffect( () => {
-    setDisplayedTotal(formatCurrency((data?.totalSpent || 1234), currencyName))
-  }, [data])
+    setDisplayedTotal(formatCurrency(data.totalSpent, data.mainCurrency))
+    // setDisplayedTotal(1773)
+  }, [data]) 
 
   return (<div className=' w-full h-[35%] flex flex-col justify-around'>
     <div className='h-[50%] flex flex-col items-center justify-center'>
@@ -40,7 +43,7 @@ const HeroSection = () => {
     <div className='h-[20%] px-4' >
       <div className='flex justify-between px-6 mb-4'>
         <span className='text-white text-[1.5rem]'>Monthly budget</span>
-        <span className='text-gray-400 text-[1.5rem]' onClick={handleBudgetClick}>{`${formatCurrency(data.budget, currencyName)}`}</span>
+        <span className='text-white underline text-[1.5rem]' onClick={handleBudgetClick}>{`${formatCurrency(data.budget, data.mainCurrency)}`}</span>
       </div>
       <div className="relative w-full h-4 bg-gray-300 rounded-full overflow-hidden shadow-md">
         <div

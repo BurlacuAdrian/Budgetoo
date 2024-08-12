@@ -3,6 +3,8 @@ import axiosInstance from '../../JS/axiosInstance';
 import { defaultExpenses, defaultIncome, initialData } from '../../JS/DefaultData';
 import Swal from 'sweetalert2';
 import '../../App.css'
+import {sumAndConvertExpenses, sumAndConvertItems} from '../../JS/Utils.js'
+
 
 const DataContext = createContext({
   budget: 3111,
@@ -52,7 +54,6 @@ export const DataProvider = ({ children }) => {
         picture: fetchedData.picture,
         expenses: fetchedData.expenses,
         income: fetchedData.income,
-        totalSpent: calculateTotalSpent(fetchedData.expenses)
       });
 
     } catch (err) {
@@ -73,7 +74,6 @@ export const DataProvider = ({ children }) => {
           budget: fetchedData.budget,
           expenses: fetchedData.expenses,
           income: fetchedData.income,
-          totalSpent: calculateTotalSpent(fetchedData.expenses)
         }
         return newData
       });
@@ -98,20 +98,22 @@ export const DataProvider = ({ children }) => {
   // }, [])
   }, [data.year, data.month])
 
-  const saveBudget = async (amount) => {
+  const saveBudget = async (amount, currency) => {
     
     const newData = {
       ...data,
-      budget: +amount
+      budget: +amount,
+      mainCurrency: currency
     }
     
     const response = await axiosInstance.put(`/transactions`, {
       ...newData,
       month: selectedMonth,
-      year: selectedYear
+      year: selectedYear,
+      main_currency: currency
     });
 
-    console.log(response)
+    // console.log(response)
 
     if (response.status != 200) {
       Swal.fire('Failed to save budget', '', 'error')
@@ -192,17 +194,19 @@ export const DataProvider = ({ children }) => {
    * Auto-update data when expenses or income change
    */
   useEffect(() => {
-    if(data?.expenses){
+    // if(data?.expenses){
       setData(oldData => {
         const newData = {
           ...oldData,
-          totalSpent: calculateTotalSpent(data.expenses)
+          // totalSpent: calculateTotalSpent(data.expenses)
+          totalSpent: sumAndConvertExpenses(data.expenses, data.mainCurrency, data.currencyTable)
+
         }
         return newData
       });
-    }
+    // }
     
-  }, [data.expenses, data.income])
+  }, [data.expenses, data.mainCurrency])
 
   const value = {
     data: {

@@ -15,9 +15,10 @@ app.get('/v1/start-data/:year/:month', async (req, res, next) => {
     }
 
     const transaction = await Models.Transaction.findOne({ user_id: _id, year, month });
+    const user = await Models.User.findById(_id)
 
     var payload = {
-      main_currency: "EUR",
+      main_currency: user.currency,
       currency_table: initialData.currencyTable,
       email,
       picture: null,
@@ -56,7 +57,7 @@ app.get('/v1/start-data/:year/:month', async (req, res, next) => {
 app.get('/v1/transactions/:year/:month', async (req, res, next) => {
   try {
     const verified = JSON.parse(req.header('Verified'));
-    const { _id } = verified;
+    const { _id, email} = verified;
     const { year, month } = req.params;
 
     if (!year || !month) {
@@ -66,10 +67,10 @@ app.get('/v1/transactions/:year/:month', async (req, res, next) => {
     const transaction = await Models.Transaction.findOne({ user_id: _id, year, month });
 
     var payload = {
-      main_currency: "EUR",
+      main_currency: "EUR",//Default
       currency_table: initialData.currencyTable,
-      email: verified.email,
-      picture: null,
+      email: email,
+      picture: null,//Future version
       expenses: {},
       income: [],
       budget: 3000,

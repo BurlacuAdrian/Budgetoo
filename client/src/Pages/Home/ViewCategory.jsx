@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom"
-import { formatCurrency } from "../../JS/Utils.js"
+import { convertAndCalculatePercentageOfTotal, formatCurrency } from "../../JS/Utils.js"
 import { useEffect, useState } from "react"
 import EditTransaction from "./EditTransaction.jsx"
 import { useDataContext } from "../Wrappers/DataContext.jsx"
@@ -42,7 +42,8 @@ const ViewCategory = () => {
   const [categoryItems, setCategoryItems] = useState(data.expenses[shownCategory])
   
 
-  const [percentageOfBudget, setPercentageOfBudget] = useState(calculatePercentageOfBudget(categoryItems, data.budget) || 30)
+  // const [percentageOfBudget, setPercentageOfBudget] = useState(calculatePercentageOfBudget(categoryItems, data.budget) || 30)
+  const [percentageOfBudget, setPercentageOfBudget] = useState(convertAndCalculatePercentageOfTotal(categoryItems, data.mainCurrency, data.currencyTable, data.budget))
   const [noOfTransactions, setNoOfTransactions] = useState(categoryItems.length || 0)
   
 

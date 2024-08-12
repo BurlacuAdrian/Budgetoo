@@ -9,7 +9,7 @@ app.put('/v1/transactions', async (req, res, next) => {
   try {
     const verified = JSON.parse(req.header('Verified'));
     const { _id } = verified;
-    const { year, month, expenses, income, budget } = req.body;
+    const { year, month, expenses, income, budget, main_currency} = req.body;
 
     if (!year || !month || !budget) {
       return res.status(400).json({ error: 'Year, month, and budget are required' });
@@ -24,19 +24,24 @@ app.put('/v1/transactions', async (req, res, next) => {
       if (income) {
         transaction.income = income;
       }
-      transaction.budget = budget;
+      if (budget) {
+        transaction.budget = budget;
+      }
     } else {
-    let transaction = await Models.Transaction.findOne({ user_id: _id, year, month });
     transaction = new Models.Transaction({
         user_id: _id,
         year,
         month,
         expenses: expenses || {},
         income: income || [],
-        budget
+        budget: budget || 3000,
       });
     }
 
+    const user = await Models.User.findById(_id)
+    user.currency = main_currency
+
+    await user.save()
     await transaction.save();
 
     res.status(200).json("Successfully updated");

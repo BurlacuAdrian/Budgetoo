@@ -1,10 +1,111 @@
-export const formatCurrency = (number, currencyName) => {
+export const formatCurrency = (number, currencyName = "EUR") => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: currencyName,
     minimumFractionDigits: 0,
   }).format(number);
 };
+
+export const convertAndFormatCurrency = (amount, currencyName, mainCurrency, currencyTable) => {
+  let convertedAmount;
+
+  // Step 1: Check if conversion is needed
+  if (currencyName === mainCurrency) {
+    convertedAmount = amount; // No conversion needed
+  } else {
+    // Step 2: Check if the conversion is possible
+    console.log()
+    if (!currencyTable[currencyName] || !currencyTable[currencyName][mainCurrency]) {
+      throw new Error(`Conversion rate from ${currencyName} to ${mainCurrency} not found.`);
+    }
+
+    // Step 3: Convert the amount to the main currency
+    const conversionRate = currencyTable[currencyName][mainCurrency];
+    convertedAmount = amount * conversionRate;
+  }
+
+  // Step 4: Format the converted (or non-converted) amount in the format of the main currency
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: mainCurrency,
+    minimumFractionDigits: 0,
+  }).format(convertedAmount);
+};
+
+export const sumAndConvertItems = (items, mainCurrency, currencyTable) => {
+  let sum = 0;
+
+  items.forEach(item => {
+    const amount = item[1];
+    const currency = item[2];
+
+    // Check if amount is a valid number
+    const validAmount = isNaN(+amount) ? 0 : +amount;
+
+    // Check if currency conversion is needed
+    let convertedAmount;
+    if (currency === mainCurrency) {
+      convertedAmount = validAmount; // No conversion needed
+    } else {
+      // Check if the conversion is possible
+      if (!currencyTable[currency] || !currencyTable[currency][mainCurrency]) {
+        console.warn(`Conversion rate from ${currency} to ${mainCurrency} not found.`)
+        throw new Error(`Conversion rate from ${currency} to ${mainCurrency} not found.`);
+      }
+
+      // Convert the amount to the main currency
+      const conversionRate = currencyTable[currency][mainCurrency];
+      convertedAmount = validAmount * conversionRate;
+    }
+
+    // Add the converted amount to the sum
+    sum += convertedAmount;
+  });
+
+  return sum;
+};
+
+export const sumAndConvertExpenses = (expenses, mainCurrency, currencyTable) => {
+  let totalSum = 0;
+
+  for (const category in expenses) {
+    expenses[category].forEach(item => {
+      const amount = item[1];
+      const currency = item[2];
+
+      // Check if amount is a valid number
+      const validAmount = isNaN(+amount) ? 0 : +amount;
+
+      // Check if currency conversion is needed
+      let convertedAmount;
+      if (currency === mainCurrency) {
+        convertedAmount = validAmount; // No conversion needed
+      } else {
+        // Check if the conversion is possible
+        if (!currencyTable[currency] || !currencyTable[currency][mainCurrency]) {
+          console.warn(`Conversion rate from ${currency} to ${mainCurrency} not found.`)
+          throw new Error(`Conversion rate from ${currency} to ${mainCurrency} not found.`);
+        }
+
+        // Convert the amount to the main currency
+        const conversionRate = currencyTable[currency][mainCurrency];
+        convertedAmount = validAmount * conversionRate;
+      }
+
+      // Add the converted amount to the total sum
+      totalSum += convertedAmount;
+    });
+  }
+
+  return totalSum;
+};
+
+
+
+export const convertAndCalculatePercentageOfTotal = (items, mainCurrency, currencyTable, totalSpent) => {
+  return (sumAndConvertItems(items, mainCurrency, currencyTable) * 100 / totalSpent).toFixed(0)
+}
+
 
 export const formatNumberNoCurrency = (number) => {
   return new Intl.NumberFormat('en-US', {
