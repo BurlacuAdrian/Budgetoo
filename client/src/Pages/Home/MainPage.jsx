@@ -3,11 +3,14 @@ import {formatCurrency} from '../../JS/Utils.js'
 import HeroSection from './HeroSection'
 import TransactionsContainer from './TransactionsContainer'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
+import useDeviceType from '../../Hooks/useDeviceType.jsx'
 
 const MainPage = () => {
 
+  const device = useDeviceType()
+
   return (
-  <div className='bg-primaryBudgetoo h-[100dvh] w-[100dvw]'>
+  <div className={`h-[100dvh] w-[100dvw] ${device.type == 'mobile' ? 'bg-primaryBudgetoo' : 'bg-bgGrayBudgetoo'}`}>
   
     <HeroSection
     />

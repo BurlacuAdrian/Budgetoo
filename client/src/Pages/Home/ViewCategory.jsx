@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom"
-import { convertAndCalculatePercentageOfTotal, formatCurrency } from "../../JS/Utils.js"
+import { convertAndCalculatePercentageOfTotal, formatCurrency, getTransactionsCaption } from "../../JS/Utils.js"
 import { useEffect, useState } from "react"
 import EditTransaction from "./EditTransaction.jsx"
 import { useDataContext } from "../Wrappers/DataContext.jsx"
@@ -52,18 +52,6 @@ const ViewCategory = () => {
     setNoOfTransactions(categoryItems.length || 0)
     setCategoryItems(data.expenses[shownCategory])
   }, [shownCategory])
-
-  const getTransactionsCaption = (number) => {
-    switch (number) {
-      case 0:
-        return 'No transactions'
-      case 1:
-        return '1 transaction'
-      default:
-        return `${number} transactions`
-    }
-  }
-
   
 
   const handleItemClick = (element, index) => {

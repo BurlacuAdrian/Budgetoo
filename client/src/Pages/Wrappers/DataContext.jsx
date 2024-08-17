@@ -15,17 +15,6 @@ const DataContext = createContext({
   totalSpent: 0
 });
 
-//TODO account for different currencies
-const calculateTotalSpent = (expenses) => {
-  var sum = 0
-  for (const key in expenses) {
-    expenses[key].forEach(([, amount, currency]) => {
-      sum += (isNaN(+amount) ? 0 : +amount)
-    })
-  }
-
-  return sum
-}
 
 export const DataProvider = ({ children }) => {
 
@@ -42,7 +31,6 @@ export const DataProvider = ({ children }) => {
     try {
       const response = await axiosInstance.get(`/start-data/${selectedYear}/${selectedMonth}`);
       const fetchedData = response.data;
-      // console.log(response.data)
 
       setData({
         year: selectedYear,
@@ -54,6 +42,7 @@ export const DataProvider = ({ children }) => {
         picture: fetchedData.picture,
         expenses: fetchedData.expenses,
         income: fetchedData.income,
+        totalSpent: 0
       });
 
     } catch (err) {
@@ -67,7 +56,6 @@ export const DataProvider = ({ children }) => {
     try {
       const response = await axiosInstance.get(`/transactions/${data.year}/${data.month}`);
       const fetchedData = response.data;
-      // console.log(response.data)
 
       setData(oldData=>{
         const newData = {...oldData, 
@@ -86,7 +74,6 @@ export const DataProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // console.log(window.location.pathname)
     if (window.location.pathname != '/login' && window.location.pathname != '/') {
       if(!started){
         getStartData()
@@ -113,7 +100,6 @@ export const DataProvider = ({ children }) => {
       main_currency: currency
     });
 
-    // console.log(response)
 
     if (response.status != 200) {
       Swal.fire('Failed to save budget', '', 'error')
@@ -145,7 +131,6 @@ export const DataProvider = ({ children }) => {
       income: newIncome
     }
 
-    console.log(newData)
 
     const response = await axiosInstance.put(`/transactions`, newData)
     if (response.status != 200) {
@@ -161,6 +146,7 @@ export const DataProvider = ({ children }) => {
     const newExpenses = { ...data.expenses }
 
     if (isEditing) {
+
       newExpenses[selectedCategory][index] = [
         expenseName,
         amount,
@@ -174,6 +160,7 @@ export const DataProvider = ({ children }) => {
       ])
     }
 
+
     const newData = {
       ...data,
       expenses: newExpenses
@@ -181,7 +168,6 @@ export const DataProvider = ({ children }) => {
 
     const response = await axiosInstance.put(`/transactions`, newData)
     if (response.status != 200) {
-      Swal.fire('Failed to add transaction', '', 'error')
       return false
     }
 
@@ -190,9 +176,46 @@ export const DataProvider = ({ children }) => {
     return true
   }
 
-  /**
-   * Auto-update data when expenses or income change
-   */
+  const deleteIncomeByIndex = async (index) => {
+    const newIncome = [...data.income]
+
+    newIncome.splice(index, 1)
+
+    const newData = {
+      ...data,
+      income: newIncome
+    }
+
+    const response = await axiosInstance.put(`/transactions`, newData)
+    if (response.status != 200) {
+      return false
+    }
+
+    setData(newData)
+    return true
+  }
+
+  
+  const deleteExpenseByCategoryAndIndex = async (selectedCategory, index) => {
+    const newExpenses = { ...data.expenses }
+
+    newExpenses[selectedCategory].splice(index, 1)
+
+    const newData = {
+      ...data,
+      expenses: newExpenses
+    }
+
+    const response = await axiosInstance.put(`/transactions`, newData)
+    if (response.status != 200) {
+      return false
+    }
+
+    setData(newData)
+    return true
+  }
+
+  // Auto-update data when expenses or income change
   useEffect(() => {
     // if(data?.expenses){
       setData(oldData => {
@@ -214,7 +237,9 @@ export const DataProvider = ({ children }) => {
       API: {
         saveBudget,
         saveIncome,
-        saveExpenses
+        saveExpenses,
+        deleteIncomeByIndex,
+        deleteExpenseByCategoryAndIndex
       }
     }, setData, loading, error, 
   };

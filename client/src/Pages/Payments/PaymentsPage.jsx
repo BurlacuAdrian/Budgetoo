@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom"
+import useDeviceType from "../../Hooks/useDeviceType"
 
 const PaymentsPage = () => {
 
@@ -7,6 +8,9 @@ const PaymentsPage = () => {
     navigate('/home')
   }
 
+  const device = useDeviceType()
+
+  if (device.type == 'mobile') {
   return (
     <div className='bg-primaryBudgetoo h-[100dvh] w-[100dvw] flex flex-col'>
       <div className="flex-grow"></div>
@@ -18,7 +22,7 @@ const PaymentsPage = () => {
         </div>
 
         <div className="grid grid-cols-3 w-full p-4 mt-8 gap-6">
-          <span className="text-3xl col-span-3 flex items-center font-bold">Manage your mortgage and debt payments here!</span>
+          <span className="text-3xl col-span-3 flex items-center font-bold">Manage your mortgage and debt payments here! Coming soon</span>
         </div>
 
       
@@ -26,6 +30,19 @@ const PaymentsPage = () => {
       </div>
     </div>
   )
+  }
+  return (
+    <div className='w-full h-[80%] flex'>
+  
+      <div className='h-full w-[10%] min-w-[10%]'></div>
+  
+      <div className='flex flex-col w-[90%] max-w-[90%] h-full'>
+        <span className="pt-20 pl-20 text-2xl ">Manage your mortgage and debt payments here! Coming soon</span>
+  
+      </div>
+    </div>
+  
+    )
 }
 
 export default PaymentsPage

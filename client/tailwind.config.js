@@ -7,7 +7,8 @@ export default {
     extend: {
       colors:{
         primaryBudgetoo: "#1BCF9A",
-        accentBudgetoo: "#001229"
+        accentBudgetoo: "#001229",
+        bgGrayBudgetoo: '#F2F2F2'
       },
     },
   },

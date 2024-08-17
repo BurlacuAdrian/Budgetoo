@@ -50,7 +50,8 @@ export const sumAndConvertItems = (items, mainCurrency, currencyTable) => {
       // Check if the conversion is possible
       if (!currencyTable[currency] || !currencyTable[currency][mainCurrency]) {
         console.warn(`Conversion rate from ${currency} to ${mainCurrency} not found.`)
-        throw new Error(`Conversion rate from ${currency} to ${mainCurrency} not found.`);
+        return 0
+        // throw new Error(`Conversion rate from ${currency} to ${mainCurrency} not found.`);
       }
 
       // Convert the amount to the main currency
@@ -145,5 +146,16 @@ export function getMonthName(monthNumber) {
     return "Invalid month number";
   }
   return monthNames[monthNumber - 1];
+}
+
+export const getTransactionsCaption = (number) => {
+  switch (number) {
+    case 0:
+      return 'No transactions'
+    case 1:
+      return '1 transaction'
+    default:
+      return `${number} transactions`
+  }
 }
 
