@@ -1,28 +1,13 @@
 import { useLocation, useNavigate } from "react-router-dom"
 import { convertAndCalculatePercentageOfTotal, formatCurrency, getTransactionsCaption } from "../../JS/Utils.js"
 import { useEffect, useState } from "react"
-import EditTransaction from "./EditTransaction.jsx"
 import { useDataContext } from "../Wrappers/DataContext.jsx"
-
-const calculatePercentageOfBudget = (items, monthlyBudget) => {
-  try {
-      var sum = 0
-    items.forEach(item => {
-      sum += (isNaN(+item[1]) ? 0 : +item[1])
-    })
-    return (sum * 100 / monthlyBudget).toFixed(0)
-  } catch (error) {
-    return 10
-  }
-  
-}
 
 const ViewCategory = () => {
 
   const navigate = useNavigate()
 
   const handleCancelButton = () => {
-    // navigate('/home')
     navigate(-1)
   }
 
@@ -36,13 +21,9 @@ const ViewCategory = () => {
   }
   const { data, setData } = dataContext
   
-
-
   const [shownCategory, setShownCategory] = useState(location.state.category || {})
   const [categoryItems, setCategoryItems] = useState(data.expenses[shownCategory])
   
-
-  // const [percentageOfBudget, setPercentageOfBudget] = useState(calculatePercentageOfBudget(categoryItems, data.budget) || 30)
   const [percentageOfBudget, setPercentageOfBudget] = useState(convertAndCalculatePercentageOfTotal(categoryItems, data.mainCurrency, data.currencyTable, data.budget))
   const [noOfTransactions, setNoOfTransactions] = useState(categoryItems.length || 0)
   
@@ -96,7 +77,6 @@ const ViewCategory = () => {
         </div>
 
       </div>
-      {/* {isModalOpen && (<EditTransaction closeModal={closeModal} />)} */}
     </div>
   )
 }

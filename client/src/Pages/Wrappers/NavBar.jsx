@@ -15,6 +15,7 @@ function NavBar() {
   // const { data, setData, device} = dataContext
 
   const device = useDeviceType()
+  const navigate = useNavigate()
 
   const getVisibility = () => {
     //TODO change logic
@@ -26,8 +27,13 @@ function NavBar() {
     setIsVisible(getVisibility())
   }, [location.pathname])
 
+  useEffect( () => {
+    if( !(location.pathname == '/login' || location.pathname == '/signup')){
+      navigate('/home')
+    }
+  }, [device.type])
 
-  const navigate = useNavigate()
+
   const [isVisible, setIsVisible] = useState(getVisibility())
 
   const handleMainAction = () => {

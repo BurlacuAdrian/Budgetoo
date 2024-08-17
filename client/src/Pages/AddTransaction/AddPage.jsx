@@ -1,13 +1,11 @@
 import { useLocation, useNavigate } from "react-router-dom"
-import { formatCurrency, formatNumberNoCurrency, getSVGForCategory } from "../../JS/Utils"
 import { useEffect, useState } from "react"
 import { useDataContext } from "../Wrappers/DataContext"
 import { defaultCategories } from "../../JS/DefaultData"
-import ButtonDarkOnWhite from "../../Components/ButtonDarkOnWhite"
 import Swal from "sweetalert2"
-import axiosInstance from "../../JS/axiosInstance"
-import ToggleButton from "../../Components/ToggleButton"
 import useDeviceType from "../../Hooks/useDeviceType"
+import AddPageDesktop from "./AddPageDesktop"
+import AddPageMobile from "./AddPageMobile"
 
 const AddPage = () => {
 
@@ -15,7 +13,6 @@ const AddPage = () => {
   const location = useLocation()
 
   const handleCancelButton = () => {
-    // navigate('/home')
     navigate(-1)
   }
 
@@ -34,40 +31,40 @@ const AddPage = () => {
   const [editableItem, setEditableItem] = useState(location.state || {})
 
   const [expenseName, setExpenseName] = useState(() => {
-    if (editableItem) {
-      if (editableItem.expenseName !== undefined) {
-        return editableItem.expenseName;
-      }
-      if (Array.isArray(editableItem.income) && editableItem.income.length > 0) {
-        return editableItem.income[0];
-      }
+    if (!editableItem) {
+      return ''
     }
-    return '';
+    if (editableItem.expenseName !== undefined) {
+      return editableItem.expenseName
+    }
+    if (Array.isArray(editableItem.income) && editableItem.income.length > 0) {
+      return editableItem.income[0]
+    }
   });
 
 
   const [amount, setAmount] = useState(() => {
-    if (editableItem) {
-      if (editableItem.amount !== undefined) {
-        return editableItem.amount;
-      }
-      if (Array.isArray(editableItem.income) && editableItem.income.length > 1) {
-        return editableItem.income[1];
-      }
+    if (!editableItem) {
+      return ''
     }
-    return '';
+    if (editableItem.amount !== undefined) {
+      return editableItem.amount
+    }
+    if (Array.isArray(editableItem.income) && editableItem.income.length > 1) {
+      return editableItem.income[1]
+    }
   });
 
   const [currency, setCurrency] = useState(() => {
     if (editableItem) {
-      if (editableItem.currency !== undefined) {
-        return editableItem.currency;
-      }
-      if (Array.isArray(editableItem.income) && editableItem.income.length > 2) {
-        return editableItem.income[2];
-      }
+      return 'EUR'
     }
-    return 'EUR';
+    if (editableItem.currency !== undefined) {
+      return editableItem.currency
+    }
+    if (Array.isArray(editableItem.income) && editableItem.income.length > 2) {
+      return editableItem.income[2]
+    }
   });
 
   const [selectedCategory, setSelectedCategory] = useState(() => {
@@ -80,16 +77,16 @@ const AddPage = () => {
     return null;
   });
 
-  const index = editableItem?.index || 0
-  const [isEditing, setIsEditing] = useState(Boolean(location.state?.editing));
-  const [transactionType, setTransactionType] = useState(location?.state?.type || 'Expenses')
+  const indexForEditing = editableItem?.index || 0
+  const isEditing = Boolean(location.state?.editing);
+  const transactionType = location?.state?.type || 'Expenses'
 
   const [active, setActive] = useState(() => {
     return transactionType || 'Expenses';
   });
 
   const confirmExpense = async () => {
-    const success = await data.API.saveExpenses([expenseName, amount, currency], isEditing, index, selectedCategory)
+    const success = await data.API.saveExpenses([expenseName, amount, currency], isEditing, indexForEditing, selectedCategory)
 
     if (!success) {
       Swal.fire('Failed to add transaction', '', 'error')
@@ -99,7 +96,7 @@ const AddPage = () => {
   }
 
   const confirmIncome = async () => {
-    const success = await data.API.saveIncome([expenseName, amount, currency], isEditing, index)
+    const success = await data.API.saveIncome([expenseName, amount, currency], isEditing, indexForEditing)
 
     if (!success) {
       Swal.fire('Failed to add transaction', '', 'error')
@@ -125,223 +122,16 @@ const AddPage = () => {
       return
     }
 
-    //Income
-    console.log("confirmed income")
     confirmIncome()
-  }
-
-  const handleDeleteButton = () => {
-    Swal.fire({
-      title: "Are you sure you want to delete this transaction?",
-      showDenyButton: true,
-      confirmButtonText: `Keep`,
-      denyButtonText: `Delete`,
-      customClass: {
-        denyButton: 'swal2-button swal2-red-button'
-      }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Action when confirmed
-      } else if (result.isDenied) {
-        deleteTransaction();
-      }
-    });
-
-  }
-
-  const deleteExpense = async () => {
-    const newExpenses = { ...data.expenses }
-
-    newExpenses[selectedCategory].splice(index, 1)
-
-    const newData = {
-      ...data,
-      expenses: newExpenses
-    }
-
-    const response = await axiosInstance.put(`/transactions`, newData)
-    if (response.status != 200) {
-      Swal.fire('Failed to delete transaction', '', 'error')
-      // navigate('/home')
-      navigate(-1)
-      return
-    }
-
-    setData(newData)
-
-    // navigate('/home')
-    navigate(-1)
-  }
-
-  const deleteIncome = async () => {
-    const newIncome = [...data.income]
-
-    newIncome.splice(index, 1)
-
-    const newData = {
-      ...data,
-      income: newIncome
-    }
-
-    const response = await axiosInstance.put(`/transactions`, newData)
-    if (response.status != 200) {
-      Swal.fire('Failed to delete transaction', '', 'error')
-      // navigate('/home')
-      navigate(-1)
-      return
-    }
-
-    setData(newData)
-
-    // navigate('/home')
-    navigate(-1)
-  }
-
-  const deleteTransaction = async () => {
-
-    if (transactionType == 'Expenses') {
-      deleteExpense()
-      return
-    }
-
-    deleteIncome()
-
   }
 
   const device = useDeviceType()
 
   if (device.type == 'mobile') {
-    return (
-      <div className='bg-primaryBudgetoo h-[100dvh] w-[100dvw] flex flex-col'>
-        <div className="flex-grow"></div>
-        <div className='bg-white w-full h-[90%] mt-auto rounded-t-[4rem] flex flex-col items-center pt-6 px-8'>
-
-          <div className="relative w-full flex items-start" onClick={handleCancelButton}>
-            <img src='./cancel.svg' className="size-8 inline " />
-            <span className="absolute w-full text-center font-bold text-xl">Add transaction</span>
-          </div>
-
-          <ToggleButton comparandBase={active} leftComparand={'Expenses'} rightComparand={'Income'} leftText='Expenses' rightText='Income' leftClickHandler={() => setActive('Expenses')} rightClickHandler={() => setActive('Income')} />
-
-
-          <div className="grid grid-cols-4 p-2 gap-8 mt-8">
-
-            {active === 'Expenses' && (
-              <img src={getSVGForCategory(selectedCategory)} className="col-span-1"></img>
-
-            )}
-
-            {active === 'Expenses' && (
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 border rounded col-span-3"
-              >
-                {categories.map((category, index) => (
-                  <option key={index} value={category}>{category}</option>
-                ))}
-              </select>
-            )}
-
-
-            <img src={'./text.svg'} className="col-span-1"></img>
-            <input className="col-span-3 flex items-center text-[1.5rem] border-b-2 border-gray-400 focus:outline-none focus:border-blue-500" placeholder={active == 'Expenses' ? "Expense name" : 'Income source'} value={expenseName} onChange={(e) => setExpenseName(e.target.value)} />
-
-
-            <img src={'./check.svg'} className="col-span-1"></img>
-            <input className="col-span-3 flex items-center text-[1.5rem] border-b-2 border-gray-400 focus:outline-none focus:border-blue-500" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
-
-            <img src={'./dollar.svg'} className="col-span-1"></img>
-            {/* <input className="col-span-3 flex items-center text-[1.5rem] border-b-2 border-gray-400 focus:outline-none focus:border-blue-500" /> */}
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-full px-3 py-2 border rounded col-span-3"
-            >
-              <option value="EUR">EUR</option>
-              <option value="USD">USD</option>
-              <option value="RON">RON</option>
-            </select>
-          </div>
-
-          <ButtonDarkOnWhite text="Confirm" className="mt-4 w-2/3" onClickHandler={confirmTransaction} />
-          {isEditing==true && <ButtonDarkOnWhite text="Delete" className="mt-4 w-2/3 bg-red-500" onClickHandler={handleDeleteButton} />}
-        </div>
-      </div>
-    )
+    return (<AddPageMobile data={data} confirmTransaction={confirmTransaction} active={active} setActive={setActive} transactionType={transactionType} isEditing={isEditing} indexForEditing={indexForEditing} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} currency={currency} setCurrency={setCurrency} amount={amount} setAmount={setAmount} expenseName={expenseName} setExpenseName={setExpenseName} categories={categories} handleCancelButton={handleCancelButton}/>)
   }
 
-  return (
-    <div className='w-full h-[80%] flex'>
-
-      <div className='h-full w-[10%] min-w-[10%]'></div>
-
-      <div className='flex flex-col w-[90%] max-w-[90%] h-full p-20'>
-
-        <div className="relative w-full flex items-end" onClick={handleCancelButton}>
-          <span className="absolute w-full text-center font-bold text-xl">Add transaction</span>
-          <img src='./cancel.svg' className="size-12 inline " />
-        </div>
-
-        <div className="w-full flex justify-center">
-          <ToggleButton comparandBase={active} leftComparand={'Expenses'} rightComparand={'Income'} leftText='Expenses' rightText='Income' leftClickHandler={() => setActive('Expenses')} rightClickHandler={() => setActive('Income')} />
-        </div>
-
-
-        <div className="grid grid-cols-2 gap-8 mt-16 w-full p-20">
-
-          <div className="grid grid-cols-4 w-[70%] gap-12">
-            {active === 'Expenses' && (
-              <img src={getSVGForCategory(selectedCategory)} className="col-span-1"></img>
-
-            )}
-
-            {active === 'Expenses' && (
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 border rounded col-span-3"
-              >
-                {categories.map((category, index) => (
-                  <option key={index} value={category}>{category}</option>
-                ))}
-              </select>
-            )}
-
-
-            <img src={'./text.svg'} className="col-span-1"></img>
-            <input className="col-span-3 flex items-center text-[1.5rem] border-b-2 border-gray-400 focus:outline-none focus:border-blue-500" placeholder={active == 'Expenses' ? "Expense name" : 'Income source'} value={expenseName} onChange={(e) => setExpenseName(e.target.value)} />
-
-
-            <img src={'./check.svg'} className="col-span-1"></img>
-            <input className="col-span-3 flex items-center text-[1.5rem] border-b-2 border-gray-400 focus:outline-none focus:border-blue-500" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
-
-            <img src={'./dollar.svg'} className="col-span-1"></img>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-full px-3 py-2 border rounded col-span-3"
-            >
-              <option value="EUR">EUR</option>
-              <option value="USD">USD</option>
-              <option value="RON">RON</option>
-            </select>
-          </div>
-
-
-
-          <div className="flex flex-col justify-center gap-20">
-            <ButtonDarkOnWhite text="Confirm" className="mt-4 w-2/3" onClickHandler={confirmTransaction} />
-            <ButtonDarkOnWhite text="Cancel" className="mt-4 w-2/3" onClickHandler={handleCancelButton} />
-          </div>
-
-
-        </div>
-
-
-      </div>
-    </div>
-  )
+  return (<AddPageDesktop data={data} confirmTransaction={confirmTransaction} active={active} setActive={setActive} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} currency={currency} setCurrency={setCurrency} amount={amount} setAmount={setAmount} expenseName={expenseName} setExpenseName={setExpenseName} categories={categories} handleCancelButton={handleCancelButton}/>)
 
 
 }

@@ -4,6 +4,8 @@ import { defaultExpenses, defaultIncome, initialData } from '../../JS/DefaultDat
 import Swal from 'sweetalert2';
 import '../../App.css'
 import {sumAndConvertExpenses, sumAndConvertItems} from '../../JS/Utils.js'
+import useDeviceType from '../../Hooks/useDeviceType.jsx';
+import { useNavigate } from 'react-router-dom';
 
 
 const DataContext = createContext({

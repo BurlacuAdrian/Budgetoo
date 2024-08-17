@@ -1,94 +1,17 @@
 import { useEffect, useState } from 'react'
-import { convertAndCalculatePercentageOfTotal, formatCurrency, formatNumberNoCurrency, getSVGForCategory, sumAndConvertItems, getTransactionsCaption } from '../../JS/Utils.js'
-import CircularProgressBar from './CircularProgressBar'
-import { useNavigate } from 'react-router-dom'
-import { useLocation } from "react-router-dom";
-import ToggleButton from "../../Components/ToggleButton"
-import { useDataContext } from '../Wrappers/DataContext.jsx';
-import ButtonDarkOnWhite from '../../Components/ButtonDarkOnWhite.jsx';
-import { defaultExpenses } from '../../JS/DefaultData.js';
-import useDeviceType from '../../Hooks/useDeviceType.jsx'
+import { convertAndCalculatePercentageOfTotal, formatCurrency, formatNumberNoCurrency, getSVGForCategory, sumAndConvertItems, getTransactionsCaption } from '../../../JS/Utils.js'
+import CircularProgressBar from '../CircularProgressBar.jsx'
 import Swal from 'sweetalert2';
 
-const getColorForCategory = (category) => {
-  switch (category) {
-    case 'Housing':
-      return 'text-blue-400'
-    case 'Transportation':
-      return 'text-slate-600'
-    case 'Food':
-      return 'text-amber-900'
-    case 'Health':
-      return 'text-red-500'
-    default:
-      return 'text-primaryBudgetoo'
-  }
-}
+const TransactionsContainerDesktop = ({data, countTransactions, getColorForCategory, percentageOfBudget, noOfTransactions,  handleGenerateTemplate, desktopViewedCategory, setDesktopViewedCategory}) => {
 
-const countTransactions = (items) => {
-  return items.length
-}
+  /* Income Handling Start */
+  const [desktopIncomeIndex, setDesktopIncomeIndex] = useState(null)
+  const [desktopSelectedIncome, setDesktopSelectedIncome] = useState(null)
 
-
-const TransactionsContainer = ({ currencyName, monthlyBudget }) => {
-
-  const navigate = useNavigate()
-  const [active, setActive] = useState('Expenses');
-  const dataContext = useDataContext()
-  if (!dataContext) {
-    return <div>Loading transactions...</div>; // TODO some other fallback UI
-  }
-  const { data, setData } = dataContext
-  const device = useDeviceType()
-  const [desktopViewedCategory, setDesktopViewedCategory] = useState({ name: null, items: [] })
-
-  const handleGenerateTemplate = () => {
-    setData(oldData => ({ ...oldData, expenses: defaultExpenses }))
-  }
-
-  const handleCategoryClick = (categoryName, items) => {
-    // navigate(`/view`, {state : {category, items, budget: data.budget}})
-    if (device.type == 'mobile') {
-      navigate(`/view`, { state: { category: categoryName, type: 'Expenses', editing: true } })
-      return
-    }
-
-    setDesktopViewedCategory({ name: categoryName, items })
-  }
-
-  const handleIncomeClick = (income, index) => {
-    navigate(`/add`, { state: { income, type: 'Income', editing: true, index } })
-  }
-
-  const resetDesktopViewedCategory = () => {
-    setDesktopViewedCategory({ name: null, items: [] })
-  }
-
-  const [desktopSelectedItem, setDesktopSelectedItem] = useState(null)
-  const [desktopSelectedItemIndex, setDesktopSelectedItemIndex] = useState(null)
-
-  //Only called on desktop version
-  const handleItemClick = (element, index) => {
-
-    console.log(desktopSelectedItem)
-    //Cancel action if one element is already selected
-    if (desktopSelectedItem) {
-      return
-    }
-
-    setDesktopSelectedItem(element)
-    setDesktopSelectedItemIndex(index)
-  }
-
-  const handleDesktopItemCancel = () => {
-    setDesktopSelectedItem(null)
-    setDesktopSelectedItemIndex(null)
-  }
-
-  const handleDesktopItemSave = async ([expenseName, amount, currency], index, selectedCategory) => {
-    const result = await data.API.saveExpenses([expenseName, amount, currency], true, index, selectedCategory)
-    // handleItemClick([expenseName, amount, currency], index, true)
-    handleDesktopItemCancel()
+  const handleDesktopIncomeClick = ([incomeName, amount, currency], index) => {
+    setDesktopIncomeIndex(index)
+    setDesktopSelectedIncome([incomeName, amount, currency])
   }
 
   const handleDesktopIncomeSave = async ([incomeName, amount, currency], index) => {
@@ -120,9 +43,38 @@ const TransactionsContainer = ({ currencyName, monthlyBudget }) => {
       Swal.fire('Failed to delete transaction', '', 'error');
     }
   
-    handleDesktopItemCancel();
+    handleIncomeCancel();
   };
-  
+
+  const handleIncomeCancel = () => {
+    setDesktopIncomeIndex(null)
+  }
+
+  /* Income Handling End*/
+
+  /* Expenses Handling Start */
+
+  const [desktopSelectedExpense, setDesktopSelectedExpense] = useState(null)
+  const [desktopSelectedExpenseIndex, setDesktopSelectedExpenseIndex] = useState(null)
+
+
+  const handleExpenseClick = (element, index) => {
+
+    console.log(desktopSelectedExpense)
+    //Cancel action if one element is already selected
+    if (desktopSelectedExpense) {
+      return
+    }
+
+    setDesktopSelectedExpense(element)
+    setDesktopSelectedExpenseIndex(index)
+  }
+
+  const handleDesktopExpenseSave = async ([expenseName, amount, currency], index, selectedCategory) => {
+    const result = await data.API.saveExpenses([expenseName, amount, currency], true, index, selectedCategory)
+    // handleExpenseClick([expenseName, amount, currency], index, true)
+    handleDesktopExpenseCancel()
+  }
 
   const handleDesktopExpenseDelete = async (category, index) => {
     const item = category.items[index];
@@ -146,114 +98,25 @@ const TransactionsContainer = ({ currencyName, monthlyBudget }) => {
       Swal.fire('Failed to delete transaction', '', 'error');
     }
 
-    handleDesktopItemCancel();
+    handleDesktopExpenseCancel();
   };
 
-
-  const [percentageOfBudget, setPercentageOfBudget] = useState(0)
-  const [noOfTransactions, setNoOfTransactions] = useState(0)
-
-  useEffect(() => {
-    setNoOfTransactions(desktopViewedCategory?.items?.length)
-    //TODO check this
-    if (desktopViewedCategory && desktopViewedCategory.items) {
-      setPercentageOfBudget(convertAndCalculatePercentageOfTotal(desktopViewedCategory.items, data.mainCurrency, data.currencyTable, data.budget))
-    }
-  }, [desktopViewedCategory.items])
-
-  useEffect(() => {
-    if (data?.expenses) {
-      setDesktopViewedCategory(oldValue => {
-        return { name: oldValue.name, items: data.expenses[oldValue.name] }
-      })
-    }
-
-  }, [data.expenses])
-
-  const [desktopIncomeIndex, setDesktopIncomeIndex] = useState(null)
-  const [desktopSelectedIncome, setDesktopSelectedIncome] = useState(null)
-
-  const handleDesktopIncomeClick = ([incomeName, amount, currency], index) => {
-    setDesktopIncomeIndex(index)
-    setDesktopSelectedIncome([incomeName, amount, currency])
+  const handleDesktopExpenseCancel = () => {
+    setDesktopSelectedExpense(null)
+    setDesktopSelectedExpenseIndex(null)
   }
 
-  const handleIncomeCancel = () => {
-    setDesktopIncomeIndex(null)
+  const resetDesktopViewedCategory = () => {
+    setDesktopViewedCategory({ name: null, items: [] })
   }
 
-  if (device.type == 'mobile') {
-    return (
-      <div className='bg-white w-full h-[65%] rounded-t-[4rem] flex flex-col items-center'>
-
-        <ToggleButton comparandBase={active} leftComparand={'Expenses'} rightComparand={'Income'} leftText='Expenses' rightText='Income' leftClickHandler={() => setActive('Expenses')} rightClickHandler={() => setActive('Income')} />
-
-        <div className='h-[60%] w-full mt-8 px-3 grid gap-4 overflow-y-scroll'>
-          {active === 'Expenses' && (Object.entries(data.expenses).length == 0 ?
-            (<div className='w-full h-fit flex items-center justify-around'>
-              <span>No expenses tracked this month. </span>
-              <button className='bg-accentBudgetoo text-white p-2 rounded-3xl' onClick={handleGenerateTemplate}>Generate template?</button>
-            </div>) :
-
-            Object.entries(data.expenses).map(([category, items]) => {
-              const imgSrc = getSVGForCategory(category);
-              const totalAmount = formatCurrency(sumAndConvertItems(items, data.mainCurrency, data.currencyTable), data.mainCurrency);
-              // const percentageOfTotal = calculatePercentageOfTotal(items, data.expenses);
-              const percentageOfTotal = convertAndCalculatePercentageOfTotal(items, data.mainCurrency, data.currencyTable, data.totalSpent);
-              const transactionCount = countTransactions(items);
-
-              return (
-                <div key={category} className="grid grid-cols-12 mx-4 mr-8" onClick={() => { handleCategoryClick(category, items) }}>
-                  <div className='col-span-3 mr-4'>
-                    <CircularProgressBar percentage={percentageOfTotal} imgSrc={imgSrc} customColor={getColorForCategory(category)} />
-                  </div>
-                  <div className='col-span-9 grid grid-rows-2 py-4'>
-                    <div className='flex justify-between'>
-                      <span>{category}</span>
-                      <span>{totalAmount}</span>
-                    </div>
-                    <div className='flex justify-between'>
-                      <span className='text-gray-400'>{`${percentageOfTotal} % of total`}</span>
-                      <span className='text-gray-400'>{`${transactionCount} transactions`}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            }))}
-
-          {active === 'Income' && (data.income.length == 0 ?
-            (<div className='w-full h-fit flex items-center justify-around'>
-              <span>No income tracked this month. </span>
-              {/* TODO */}
-              <button className='bg-accentBudgetoo text-white p-2 rounded-3xl' onClick={handleGenerateTemplate}>Generate template?</button>
-            </div>) :
-
-            (<div className="mx-4 mr-8">
-              {data.income.map(([incomeName, amount, currency], index) => {
-                return (
-                  <div key={`${incomeName}${index}`} className="grid grid-cols-12 mt-6 items-center" onClick={() => { handleIncomeClick([incomeName, amount, currency], index) }}>
-                    <span className='text-2xl col-span-7'>{incomeName}</span>
-                    <span className='col-span-2 rounded-3xl bg-primaryBudgetoo py-2 px-2 mr-4 '>{currency}</span>
-                    <span className='col-span-3 text-right'>{formatNumberNoCurrency(amount)}</span>
-
-
-                  </div>
-                );
-              })
-              }
-            </div>)
-          )
-          }
-
-
-        </div>
-      </div>
-    )
+  const handleCategoryClick = (categoryName, items) => {
+    setDesktopViewedCategory({ name: categoryName, items })
   }
 
-  // if(device.type=='desktop')
+  /* Expenses Handling End */
+
   return (
-    // <div></div>)
     <div className='w-full h-[80%] flex'>
 
       <div className='h-full w-[10%] min-w-[10%]'></div>
@@ -389,28 +252,28 @@ const TransactionsContainer = ({ currencyName, monthlyBudget }) => {
 
               <div className="w-1/2 p-4 mt-4 grid gap-4 ">
                 {desktopViewedCategory && desktopViewedCategory?.items?.map((element, index) => {
-                  if (desktopSelectedItemIndex === index) {
+                  if (desktopSelectedExpenseIndex === index) {
                     return (
                       <div key={index} className="flex justify-between w-full">
-                        <input className="text-2xl rounded-xl" value={desktopSelectedItem[0]} onChange={(e) => setDesktopSelectedItem(oldValue => { const newValue = [...oldValue]; newValue[0] = e.target.value; return newValue; })} />
+                        <input className="text-2xl rounded-xl" value={desktopSelectedExpense[0]} onChange={(e) => setDesktopSelectedExpense(oldValue => { const newValue = [...oldValue]; newValue[0] = e.target.value; return newValue; })} />
                         <select
-                          value={desktopSelectedItem[2]}
-                          onChange={(e) => setDesktopSelectedItem(oldValue => { const newValue = [...oldValue]; newValue[2] = e.target.value; return newValue; })}
+                          value={desktopSelectedExpense[2]}
+                          onChange={(e) => setDesktopSelectedExpense(oldValue => { const newValue = [...oldValue]; newValue[2] = e.target.value; return newValue; })}
                           className="w-1/3 px-3 py-2 border rounded-xl "
                         >
                           <option value="EUR">EUR</option>
                           <option value="USD">USD</option>
                           <option value="RON">RON</option>
                         </select>
-                        <input className="text-2xl text-center w-1/3 rounded-xl" value={desktopSelectedItem[1]} onChange={(e) => setDesktopSelectedItem(oldValue => { const newValue = [...oldValue]; newValue[1] = e.target.value; return newValue; })} />
-                        <button className='mx-4 bg-primaryBudgetoo py-3 px-5 rounded-xl' onClick={() => handleDesktopItemSave([desktopSelectedItem[0], desktopSelectedItem[1], desktopSelectedItem[2]], index, desktopViewedCategory.name)}>Save</button>
+                        <input className="text-2xl text-center w-1/3 rounded-xl" value={desktopSelectedExpense[1]} onChange={(e) => setDesktopSelectedExpense(oldValue => { const newValue = [...oldValue]; newValue[1] = e.target.value; return newValue; })} />
+                        <button className='mx-4 bg-primaryBudgetoo py-3 px-5 rounded-xl' onClick={() => handleDesktopExpenseSave([desktopSelectedExpense[0], desktopSelectedExpense[1], desktopSelectedExpense[2]], index, desktopViewedCategory.name)}>Save</button>
                         <button className='mx-4 bg-red-400 p-3 rounded-xl' onClick={() => handleDesktopExpenseDelete(desktopViewedCategory, index)}>Delete</button>
-                        <button className='mx-4 bg-gray-400 p-3 rounded-xl' onClick={() => handleDesktopItemCancel()}>Cancel</button>
+                        <button className='mx-4 bg-gray-400 p-3 rounded-xl' onClick={() => handleDesktopExpenseCancel()}>Cancel</button>
                       </div>
                     )
                   }
                   return (
-                    <div key={index} className="flex justify-between w-full" onClick={() => handleItemClick(element, index)}>
+                    <div key={index} className="flex justify-between w-full" onClick={() => handleExpenseClick(element, index)}>
                       <span className="text-2xl">{element[0]}</span>
                       <span className="text-2xl">{formatCurrency(element[1], element[2])}</span>
                     </div>
@@ -426,7 +289,6 @@ const TransactionsContainer = ({ currencyName, monthlyBudget }) => {
       </div>
     </div>
   )
-
 }
 
-export default TransactionsContainer
+export default TransactionsContainerDesktop

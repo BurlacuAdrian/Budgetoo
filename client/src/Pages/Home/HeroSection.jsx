@@ -18,7 +18,6 @@ const HeroSection = () => {
   const device = useDeviceType()
 
   const [displayedTotal, setDisplayedTotal] = useState(formatCurrency(formatCurrency(data?.totalSpent || 0, data?.mainCurrency)))
-  //TODO
 
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false)
 
@@ -30,11 +29,6 @@ const HeroSection = () => {
     setDisplayedTotal(formatCurrency(data?.totalSpent || 0, data?.mainCurrency))
   }, [data])
 
-  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false)
-
-  const showDatePicker = () => {
-    setIsDatePickerVisible(true)
-  }
   const [selectedMonth, setSelectedMonth] = useState(data.month);
   const [selectedYear, setSelectedYear] = useState(data.year);
 
