@@ -29,8 +29,8 @@ const HeroSection = () => {
     setDisplayedTotal(formatCurrency(data?.totalSpent || 0, data?.mainCurrency))
   }, [data])
 
-  const [selectedMonth, setSelectedMonth] = useState(data.month);
-  const [selectedYear, setSelectedYear] = useState(data.year);
+  const [selectedMonth, setSelectedMonth] = useState(data?.month);
+  const [selectedYear, setSelectedYear] = useState(data?.year);
 
   const displayMonth = selectedMonth ? `${selectedMonth}`.padStart(2, '0') : 'MM';
 
@@ -54,17 +54,17 @@ const HeroSection = () => {
       <div className='h-[50%] flex flex-col items-center justify-center'>
         <span className='text-white text-[3rem] font-bold'>{displayedTotal}</span>
         {/* <span className='text-gray-300 text-[2rem] font-bold underline '>{`${getMonthName(data?.month)}`}</span> */}
-        <MonthsSlider data={data} setData={setData} />
+        {/* <MonthsSlider data={data} setData={setData} /> */}
       </div>
       <div className='h-[20%] px-4' >
         <div className='flex justify-between px-6 mb-4'>
           <span className='text-white text-[1.5rem]'>Monthly budget</span>
-          <span className='text-white underline text-[1.5rem]' onClick={handleBudgetClick}>{`${formatCurrency(data.budget, data.mainCurrency)}`}</span>
+          <span className='text-white underline text-[1.5rem]' onClick={handleBudgetClick}>{`${formatCurrency(data?.budget, data?.mainCurrency)}`}</span>
         </div>
         <div className="relative w-full h-4 bg-gray-300 rounded-full overflow-hidden shadow-md">
           <div
             className="h-full bg-blue-900 rounded-full shadow-lg"
-            style={{ width: `${(data?.totalSpent || 1234) / data.budget * 100}%` }}
+            style={{ width: `${(data?.totalSpent || 1234) / data?.budget * 100}%` }}
           ></div>
         </div>
       </div>
@@ -91,12 +91,12 @@ const HeroSection = () => {
         <div className='w-[30%]' >
           <div className='flex justify-between px-6 mb-4'>
             <span className='text-[1.5rem]'>Monthly budget</span>
-            <span className='underline text-[1.5rem]' onClick={handleBudgetClick}>{`${formatCurrency(data.budget, data.mainCurrency)}`}</span>
+            <span className='underline text-[1.5rem]' onClick={handleBudgetClick}>{`${formatCurrency(data?.budget, data?.mainCurrency)}`}</span>
           </div>
           <div className="relative w-full h-4 bg-gray-300 rounded-full overflow-hidden shadow-md">
             <div
               className="h-full bg-blue-900 rounded-full shadow-lg"
-              style={{ width: `${(data?.totalSpent || 1234) / data.budget * 100}%` }}
+              style={{ width: `${(data?.totalSpent || 1234) / data?.budget * 100}%` }}
             ></div>
           </div>
         </div>

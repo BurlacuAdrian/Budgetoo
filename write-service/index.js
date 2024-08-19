@@ -52,6 +52,33 @@ app.put('/v1/transactions', async (req, res, next) => {
   }
 });
 
+app.put('/v1/nickname/:nickname', async (req, res, next) => {
+  try {
+    const verified = JSON.parse(req.header('Verified'));
+    const { _id } = verified;
+    const { nickname } = req.params;
+
+    if (!nickname) {
+      return res.status(400).json({ error: 'Nickname required!' });
+    }
+
+    const user = await Models.User.findById(_id)
+
+    if(!user){
+      return res.status(404).json({ error: 'User not found!' });
+    }
+
+    user.nickname = nickname
+    await user.save();
+
+    res.status(200).json("Successfully updated");
+
+  } catch (error) {
+    console.log('Error during updating nickname', error);
+    return res.status(500).json({ error: 'Error during updating nickname' });
+  }
+});
+
 
 const PORT = process.env.WRITE_MS_PORT || 8023;
 app.listen(PORT, () => {

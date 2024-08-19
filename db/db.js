@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const User = require('./Models/User.js');
 const Transaction = require("./Models/Transaction.js")
-const Models = {User, Transaction}
+const Family = require("./Models/Family.js")
+const Models = {User, Transaction, Family}
 
 const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/budgetoo';
 const options = {

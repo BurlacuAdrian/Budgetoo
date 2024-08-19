@@ -4,7 +4,7 @@ import CircularProgressBar from '../CircularProgressBar.jsx'
 import { useNavigate } from 'react-router-dom'
 import ToggleButton from "../../../Components/ToggleButton.jsx"
 
-const TransactionsContainerMobile = ({data, countTransactions, getColorForCategory, percentageOfBudget, noOfTransactions,  handleGenerateTemplate,  }) => {
+const TransactionsContainerMobile = ({ data, countTransactions, getColorForCategory, percentageOfBudget, noOfTransactions, handleGenerateTemplate, }) => {
 
   const [active, setActive] = useState('Expenses');
 
@@ -75,6 +75,21 @@ const TransactionsContainerMobile = ({data, countTransactions, getColorForCatego
               );
             })
             }
+
+            {data.incomeFromFamily &&
+              Object.entries(data.incomeFromFamily).map(([nickname, incomes], index) => (
+                incomes.map(([incomeName, amount, currency]) => (
+                  <div key={`${incomeName}${index}`} className="grid grid-cols-12 mt-6 items-center bg-emerald-100 px-2 rounded-2xl">
+                    <span className='text-2xl col-span-7'>{`${nickname}'s ${incomeName}`}</span>
+                    <span className='col-span-2 rounded-3xl bg-primaryBudgetoo py-2 px-2 mr-4 '>{currency}</span>
+                    <span className='col-span-3 text-right'>{formatNumberNoCurrency(amount)}</span>
+
+                  </div>
+                ))
+              )
+              )
+            }
+            
           </div>)
         )
         }

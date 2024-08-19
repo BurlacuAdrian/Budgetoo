@@ -29,7 +29,7 @@ function NavBar() {
 
   useEffect( () => {
     if( !(location.pathname == '/login' || location.pathname == '/signup')){
-      navigate('/home')
+      // navigate('/home')
     }
   }, [device.type])
 

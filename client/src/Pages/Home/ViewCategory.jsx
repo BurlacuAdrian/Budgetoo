@@ -20,20 +20,20 @@ const ViewCategory = () => {
     return <div>Loading...</div>; // TODO some other fallback UI
   }
   const { data, setData } = dataContext
-  
+
   const [shownCategory, setShownCategory] = useState(location.state.category || {})
   const [categoryItems, setCategoryItems] = useState(data.expenses[shownCategory])
-  
-  const [percentageOfBudget, setPercentageOfBudget] = useState(convertAndCalculatePercentageOfTotal(categoryItems, data.mainCurrency, data.currencyTable, data.budget))
-  const [noOfTransactions, setNoOfTransactions] = useState(categoryItems.length || 0)
-  
+
+  const [percentageOfBudget, setPercentageOfBudget] = useState(convertAndCalculatePercentageOfTotal(data.expenses[shownCategory], data.mainCurrency, data.currencyTable, data.budget))
+  const [noOfTransactions, setNoOfTransactions] = useState(data.expenses[shownCategory].length || 0)
+
 
 
   useEffect(() => {
-    setNoOfTransactions(categoryItems.length || 0)
-    setCategoryItems(data.expenses[shownCategory])
+    setNoOfTransactions(data.expenses[shownCategory].length || 0)
+    // setCategoryItems(data.expenses[shownCategory])
   }, [shownCategory])
-  
+
 
   const handleItemClick = (element, index) => {
     navigate(`/add`, {
@@ -65,7 +65,7 @@ const ViewCategory = () => {
         </div>
 
         <div className="w-full p-4 mt-4 grid gap-4">
-          {categoryItems.map((element, index) => {
+          {data.expenses[shownCategory].map((element, index) => {
 
             return (
               <div key={index} className="flex justify-between w-full" onClick={() => handleItemClick(element, index)}>
@@ -74,6 +74,31 @@ const ViewCategory = () => {
               </div>
             )
           })}
+
+          {data.expensesFromFamily &&
+            Object.entries(data.expensesFromFamily).map(([nickname, expenses], index) => (
+              <div className='gap-2 grid'>
+                <div className='text-xl italic text-emerald-900 font-bold mb-2 mt-4'>{`Expenses added by ${nickname}`}</div>
+                {expenses[shownCategory].map(([incomeName, amount, currency]) => (
+                  <div key={index} className="flex justify-between w-full">
+                    <span className="text-2xl">{incomeName}</span>
+                    <span className="text-2xl">{formatCurrency(amount, currency)}</span>
+                  </div>
+                ))}
+              </div>
+            )
+            )
+          }
+
+          {/* {data.expenses[shownCategory].map((element, index) => {
+
+            return (
+              <div key={index} className="flex justify-between w-full" onClick={() => handleItemClick(element, index)}>
+                <span className="text-2xl">{element[0]}</span>
+                <span className="text-2xl">{formatCurrency(element[1], element[2])}</span>
+              </div>
+            )
+          })} */}
         </div>
 
       </div>

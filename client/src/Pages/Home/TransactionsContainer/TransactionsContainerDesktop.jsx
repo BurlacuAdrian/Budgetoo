@@ -3,7 +3,7 @@ import { convertAndCalculatePercentageOfTotal, formatCurrency, formatNumberNoCur
 import CircularProgressBar from '../CircularProgressBar.jsx'
 import Swal from 'sweetalert2';
 
-const TransactionsContainerDesktop = ({data, countTransactions, getColorForCategory, percentageOfBudget, noOfTransactions,  handleGenerateTemplate, desktopViewedCategory, setDesktopViewedCategory}) => {
+const TransactionsContainerDesktop = ({ data, countTransactions, getColorForCategory, percentageOfBudget, noOfTransactions, handleGenerateTemplate, desktopViewedCategory, setDesktopViewedCategory }) => {
 
   /* Income Handling Start */
   const [desktopIncomeIndex, setDesktopIncomeIndex] = useState(null)
@@ -22,27 +22,27 @@ const TransactionsContainerDesktop = ({data, countTransactions, getColorForCateg
 
   const handleDesktopIncomeDelete = async (index) => {
     const item = data.income[index]; // Replace with your actual income item retrieval logic
-    
+
     const result = await Swal.fire({
       title: `Do you want to delete income '${item[0]}' for ${item[2]} ${item[1]}?`,
       showCancelButton: true,
       confirmButtonText: "Delete",
-      customClass: { 
-        confirmButton: 'swal2-button swal2-red-button', 
+      customClass: {
+        confirmButton: 'swal2-button swal2-red-button',
         cancelButton: 'swal2-button'
       }
     });
-  
+
     if (!result.isConfirmed) {
       return; // Exit if the user cancels the action
     }
-  
+
     const deleteResult = await data.API.deleteIncomeByIndex(index);
-  
+
     if (!deleteResult) {
       Swal.fire('Failed to delete transaction', '', 'error');
     }
-  
+
     handleIncomeCancel();
   };
 
@@ -82,8 +82,8 @@ const TransactionsContainerDesktop = ({data, countTransactions, getColorForCateg
       title: `Do you want to delete '${item[0]}' for ${item[2]} ${item[1]}?`,
       showCancelButton: true,
       confirmButtonText: "Delete",
-      customClass: { 
-        confirmButton: 'swal2-button swal2-red-button', 
+      customClass: {
+        confirmButton: 'swal2-button swal2-red-button',
         cancelButton: 'swal2-button'
       }
     });
@@ -170,6 +170,23 @@ const TransactionsContainerDesktop = ({data, countTransactions, getColorForCateg
               )
             }
             )}
+
+
+            {data.incomeFromFamily &&
+              Object.entries(data.incomeFromFamily).map(([nickname, incomes], index) => (
+                incomes.map(([incomeName, amount, currency]) => (
+                  <div key={`${incomeName}${index}`} className="bg-emerald-100 rounded-xl w-1/6 drop-shadow-lg h-32 p-4 grid grid-rows-2 gap-4" onClick={() => { }}>
+                    <div className='text-2xl col-span-7'>{`${nickname}'s ${incomeName}`}</div>
+                    <div>
+                      <span className='col-span-2 rounded-3xl bg-primaryBudgetoo py-2 px-2 mr-4 '>{currency}</span>
+                      <span className='col-span-3 text-right text-2xl'>{formatNumberNoCurrency(amount)}</span>
+                    </div>
+                  </div>
+                ))
+              )
+              )
+            }
+
 
           </div>
         </div>
@@ -280,6 +297,21 @@ const TransactionsContainerDesktop = ({data, countTransactions, getColorForCateg
                   )
 
                 })}
+
+                {desktopViewedCategory && data.expensesFromFamily &&
+                  Object.entries(data.expensesFromFamily).map(([nickname, expenses], index) => (
+                    <div className='gap-2 grid'>
+                      <div className='text-xl italic text-emerald-900 font-bold mb-2 mt-4'>{`Expenses added by ${nickname}`}</div>
+                    {expenses[desktopViewedCategory.name].map(([incomeName, amount, currency]) => (
+                      <div key={index} className="flex justify-between w-full" >
+                        <span className="text-2xl">{incomeName}</span>
+                        <span className="text-2xl">{formatCurrency(amount, currency)}</span>
+                      </div>
+                    ))}
+                    </div>
+                  )
+                  )
+                }
               </div>
             </div>
 

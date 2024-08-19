@@ -14,7 +14,10 @@ const DataContext = createContext({
   email: 'email',
   expenses: {},
   income: [],
-  totalSpent: 0
+  totalSpent: 0,
+  isPartOfAFamily: false,
+  familyMembers: [],
+  incomeFromFamily: {}
 });
 
 
@@ -44,7 +47,12 @@ export const DataProvider = ({ children }) => {
         picture: fetchedData.picture,
         expenses: fetchedData.expenses,
         income: fetchedData.income,
-        totalSpent: 0
+        totalSpent: 0,
+        isPartOfAFamily: fetchedData.isPartOfAFamily,
+        familyMembers: fetchedData.familyMembers,
+        incomeFromFamily: fetchedData.incomeFromFamily,
+        expensesFromFamily: fetchedData.expensesFromFamily,
+        nickname: fetchedData.nickname
       });
 
     } catch (err) {
@@ -217,6 +225,44 @@ export const DataProvider = ({ children }) => {
     return true
   }
 
+  const sendInvite = async (toEmail) => {
+    try {
+      const response = await axiosInstance.post(`/invite`, {
+        email: toEmail
+      })
+      if (response.status != 200) {
+        return false
+      }
+      return true
+    } catch (error) {
+      return false
+    }
+    
+  }
+
+  const saveNickname = async (nickname) => {
+    try {
+      const response = await axiosInstance.put(`/nickname/${nickname}`)
+      if (response.status != 200) {
+        return false
+      }
+      setData(oldData=>{
+        const newData = {
+          ...oldData,
+          nickname
+        }
+        return newData
+      })
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+
+  useEffect( () => {
+    console.log(data)
+  },[data])
+
   // Auto-update data when expenses or income change
   useEffect(() => {
     // if(data?.expenses){
@@ -241,7 +287,9 @@ export const DataProvider = ({ children }) => {
         saveIncome,
         saveExpenses,
         deleteIncomeByIndex,
-        deleteExpenseByCategoryAndIndex
+        deleteExpenseByCategoryAndIndex,
+        sendInvite,
+        saveNickname
       }
     }, setData, loading, error, 
   };

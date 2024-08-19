@@ -1,12 +1,7 @@
 const express = require('express');
-
-
-const redis = require('redis');
-const bodyParser = require('body-parser');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 require('dotenv').config({path:'../.env'})
 
-const cors = require('cors')
 const cookieParser = require('cookie-parser');
 const { rateLimiter, corsHandler, verifyToken} = require('./middlewares');
 
@@ -16,8 +11,7 @@ const PORT = process.env.API_GATEWAY_PORT || 8020;
 const AUTH_MS_PORT = process.env.AUTH_MS_PORT || 8021;
 const READ_MS_PORT = process.env.READ_MS_PORT || 8022;
 const WRITE_MS_PORT = process.env.WRITE_MS_PORT || 8023;
-
-
+const RT_MS_PORT = process.env.RT_MS_PORT || 8024;
 
 /*** Middleware setting ***/
 app.use(rateLimiter);
@@ -44,7 +38,7 @@ const createProxyRoute = (method, path, target, newRoute, protected = true, uses
       for(const param in params){
         modifiedRoute = modifiedRoute.replace(`:${param}`, params[param].replace(':',''))
       }
-      // console.log(modifiedRoute)
+
       return modifiedRoute
     },
     on: {
@@ -59,56 +53,32 @@ const createProxyRoute = (method, path, target, newRoute, protected = true, uses
 };
 
 /* Read routes GET, protected, params */
-const readRoutesGetParams = ['/v1/transactions/:year/:month', '/v1/start-data/:year/:month']
-readRoutesGetParams.forEach(route=> createProxyRoute('get', route, `http://localhost:${READ_MS_PORT}`, route, true, true))
-
-
-/* Read routes GET, protected */
-// const readRoutesGet = ['/v1/start-data']
-// readRoutesGet.forEach(route => createProxyRoute('get', route, `http://localhost:${READ_MS_PORT}`, route, true, false));
+const readRoutesGetProtectedParams = ['/v1/transactions/:year/:month', '/v1/start-data/:year/:month']
+readRoutesGetProtectedParams.forEach(route=> createProxyRoute('get', route, `http://localhost:${READ_MS_PORT}`, route, true, true))
 
 
 /* Write routes PUT, protected */
-const writeRoutesPut = ['/v1/transactions']
-writeRoutesPut.forEach(route => createProxyRoute('put', route, `http://localhost:${WRITE_MS_PORT}`, route, true, false));
+const writeRoutesPutProtected = ['/v1/transactions']
+writeRoutesPutProtected.forEach(route => createProxyRoute('put', route, `http://localhost:${WRITE_MS_PORT}`, route, true, false));
 
+/* Write routes PUT, protected, params */
+const writeRoutesPutProtectedParams = ['/v1/nickname/:nickname']
+writeRoutesPutProtectedParams.forEach(route => createProxyRoute('put', route, `http://localhost:${WRITE_MS_PORT}`, route, true, true));
 
 
 /* Auth routes POST, unprotected */
-const authRoutes = ['/v1/login', '/v1/google-login', '/v1/signup']
-authRoutes.forEach(route => createProxyRoute('post', route, `http://localhost:${AUTH_MS_PORT}`, route, false, false));
+const authRoutesPost = ['/v1/login', '/v1/google-login', '/v1/signup']
+authRoutesPost.forEach(route => createProxyRoute('post', route, `http://localhost:${AUTH_MS_PORT}`, route, false, false));
 
 
-// Routes for reading microservice
-// app.use('/read', (req, res, next) => {
-//   console.log('Request received on /read');
-//   next();
-// });
-
-// // Proxy Middleware
-app.use('/v1/hello', createProxyMiddleware({
-  target: `http://localhost:${AUTH_MS_PORT}`,
-  changeOrigin: true,
-  pathRewrite: (path, req) => {
-    let newPath = '/v1/hello'; // Directly set to '/login' as '/read' seems to be stripped already
-    return newPath;
-  }
-}));
+/* Real time routes POST, protected */
+const realTimeRoutesPostProtected = ['/v1/invite']
+realTimeRoutesPostProtected.forEach(route => createProxyRoute('post', route, `http://localhost:${RT_MS_PORT}`, route, true, false));
 
 
-// app.use('/hello', (req, res) => {
-//   console.log('Handling response for /read');
-//   res.status(404).send('No handler for /read');
-// });
-
-// Routes for writing microservice
-// app.use('/write', verifyJWT, createProxyMiddleware({
-//   target: 'http://localhost:5003', // Writing microservice
-//   changeOrigin: true,
-//   pathRewrite: {
-//     '^/write': '/', // rewrite path if needed
-//   }
-// }));
+/* Real time routes POST, unprotected, with params */
+const realTimeRoutesPostParams = ['/v1/accept-invite/:token']
+realTimeRoutesPostParams.forEach(route => createProxyRoute('get', route, `http://localhost:${RT_MS_PORT}`, route, false, true));
 
 
 // Start the API Gateway
