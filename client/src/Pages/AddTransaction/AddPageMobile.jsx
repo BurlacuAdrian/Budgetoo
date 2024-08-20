@@ -3,7 +3,8 @@ import { getSVGForCategory } from "../../JS/Utils"
 import ButtonDarkOnWhite from "../../Components/ButtonDarkOnWhite"
 import Swal from "sweetalert2"
 import ToggleButton from "../../Components/ToggleButton"
-const AddPageMobile = ({data, confirmTransaction, active, setActive, transactionType, isEditing, indexForEditing, selectedCategory, setSelectedCategory, currency, setCurrency, amount, setAmount, expenseName, setExpenseName, categories, handleCancelButton}) => {
+import { useState } from "react"
+const AddPageMobile = ({data, confirmTransaction, active, setActive, transactionType, isEditing, indexForEditing, selectedCategory, setSelectedCategory, currency, setCurrency, amount, setAmount, expenseName, setExpenseName, categories, handleCancelButton, selectedYear, displayMonth, handleMonthYearChange}) => {
 
   const navigate = useNavigate()
 
@@ -61,6 +62,8 @@ const AddPageMobile = ({data, confirmTransaction, active, setActive, transaction
 
   }
 
+
+
   return (
     <div className='bg-primaryBudgetoo h-[100dvh] w-[100dvw] flex flex-col'>
       <div className="flex-grow"></div>
@@ -74,7 +77,7 @@ const AddPageMobile = ({data, confirmTransaction, active, setActive, transaction
         <ToggleButton comparandBase={active} leftComparand={'Expenses'} rightComparand={'Income'} leftText='Expenses' rightText='Income' leftClickHandler={() => setActive('Expenses')} rightClickHandler={() => setActive('Income')} />
 
 
-        <div className="grid grid-cols-4 p-2 gap-8 mt-8">
+        <div className="grid grid-cols-4 p-2 gap-8 mt-4">
 
           {active === 'Expenses' && (
             <img src={getSVGForCategory(selectedCategory)} className="col-span-1"></img>
@@ -95,11 +98,11 @@ const AddPageMobile = ({data, confirmTransaction, active, setActive, transaction
 
 
           <img src={'./text.svg'} className="col-span-1"></img>
-          <input className="col-span-3 flex items-center text-[1.5rem] border-b-2 border-gray-400 focus:outline-none focus:border-blue-500" placeholder={active == 'Expenses' ? "Expense name" : 'Income source'} value={expenseName} onChange={(e) => setExpenseName(e.target.value)} />
+          <input className="col-span-3 flex items-center text-[1.5rem] border-b-2 border-gray-400 focus:outline-none focus:border-blue-500" placeholder={active == 'Expenses' ? "Expense name" : 'Income source'} value={expenseName} onChange={(e) => setExpenseName(e.target.value)} type="text"/>
 
 
           <img src={'./check.svg'} className="col-span-1"></img>
-          <input className="col-span-3 flex items-center text-[1.5rem] border-b-2 border-gray-400 focus:outline-none focus:border-blue-500" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <input className="col-span-3 flex items-center text-[1.5rem] border-b-2 border-gray-400 focus:outline-none focus:border-blue-500" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} type="number"/>
 
           <img src={'./dollar.svg'} className="col-span-1"></img>
           {/* <input className="col-span-3 flex items-center text-[1.5rem] border-b-2 border-gray-400 focus:outline-none focus:border-blue-500" /> */}
@@ -114,8 +117,11 @@ const AddPageMobile = ({data, confirmTransaction, active, setActive, transaction
           </select>
         </div>
 
-        <ButtonDarkOnWhite text="Confirm" className="mt-4 w-2/3" onClickHandler={confirmTransaction} />
-        {isEditing == true && <ButtonDarkOnWhite text="Delete" className="mt-4 w-2/3 bg-red-500" onClickHandler={handleDeleteButton} />}
+        <input type='month' value={`${selectedYear}-${displayMonth}`} onChange={handleMonthYearChange} className='text-[1.5rem] my-2' />
+        <div className="flex w-full gap-10 justify-center">
+          {isEditing == true && <ButtonDarkOnWhite text="Delete" className="mt-4 w-2/3 bg-red-500" onClickHandler={handleDeleteButton} />}
+          <ButtonDarkOnWhite text="Confirm" className="mt-4 w-2/3" onClickHandler={confirmTransaction} />
+        </div>
       </div>
     </div>
   )

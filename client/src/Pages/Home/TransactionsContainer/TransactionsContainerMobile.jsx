@@ -37,8 +37,8 @@ const TransactionsContainerMobile = ({ data, countTransactions, getColorForCateg
             const transactionCount = countTransactions(items);
 
             return (
-              <div key={category} className="grid grid-cols-12 mx-4 mr-8" onClick={() => { handleCategoryClick(category, items) }}>
-                <div className='col-span-3 mr-4'>
+              <div key={category} className="grid grid-cols-12 mx-4 mr-8 max-h-[25%]" onClick={() => { handleCategoryClick(category, items) }}>
+                <div className='col-span-3 mr-4 sm:w-24'>
                   <CircularProgressBar percentage={percentageOfTotal} imgSrc={imgSrc} customColor={getColorForCategory(category)} />
                 </div>
                 <div className='col-span-9 grid grid-rows-2 py-4'>
@@ -58,8 +58,7 @@ const TransactionsContainerMobile = ({ data, countTransactions, getColorForCateg
         {active === 'Income' && (data.income.length == 0 ?
           (<div className='w-full h-fit flex items-center justify-around'>
             <span>No income tracked this month. </span>
-            {/* TODO */}
-            <button className='bg-accentBudgetoo text-white p-2 rounded-3xl' onClick={handleGenerateTemplate}>Generate template?</button>
+            <button className='bg-accentBudgetoo text-white p-2 rounded-3xl' onClick={()=>handleGenerateTemplate(true)}>Generate template?</button>
           </div>) :
 
           (<div className="mx-4 mr-8">
@@ -77,8 +76,9 @@ const TransactionsContainerMobile = ({ data, countTransactions, getColorForCateg
             }
 
             {data.incomeFromFamily &&
-              Object.entries(data.incomeFromFamily).map(([nickname, incomes], index) => (
-                incomes.map(([incomeName, amount, currency]) => (
+              Object.entries(data.incomeFromFamily).map(([id, incomes], index) => {
+                const nickname = data.familyMembers[id]
+                return (incomes.map(([incomeName, amount, currency]) => (
                   <div key={`${incomeName}${index}`} className="grid grid-cols-12 mt-6 items-center bg-emerald-100 px-2 rounded-2xl">
                     <span className='text-2xl col-span-7'>{`${nickname}'s ${incomeName}`}</span>
                     <span className='col-span-2 rounded-3xl bg-primaryBudgetoo py-2 px-2 mr-4 '>{currency}</span>
@@ -87,6 +87,7 @@ const TransactionsContainerMobile = ({ data, countTransactions, getColorForCateg
                   </div>
                 ))
               )
+            }
               )
             }
             

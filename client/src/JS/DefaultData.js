@@ -26,7 +26,7 @@ export const defaultExpenses = {
 }
 
 export const defaultIncome = [
-  ["Salary", 3000, "EUR"]
+  ["Salary", 3000, "EUR"],
   ["Investments", 250, "EUR"]
 ]
 
@@ -45,7 +45,8 @@ export const initialData = {
   expenses: {},
   income: [],
   email: "email@email.com",
-  picture: "/"
+  picture: "/",
+  error: true
 };
 
 export const defaultCategories = [

@@ -5,6 +5,8 @@ import ButtonDarkOnWhite from "../../Components/ButtonDarkOnWhite";
 import { GoogleLogin } from '@react-oauth/google'
 import axiosInstance from "../../JS/axiosInstance.js";
 import swal from "sweetalert";
+import useDeviceType from "../../Hooks/useDeviceType.jsx";
+import { useDataContext } from "../Wrappers/DataContext.jsx";
 
 const LoginPage = ({ }) => {
 
@@ -26,19 +28,19 @@ const LoginPage = ({ }) => {
   }
 
   const handleBottomButtonClick = async () => {
-    handleLogin()
-    //TODO update
-    // navigate('/home')
-
     if (choseLogin) {
-
+      handleLogin()
       return
     }
+    handleLogin(false)
   }
 
-  const handleLogin = async () => {
+  const dataContext = useDataContext()
+
+  const handleLogin = async (login = true) => {
+    const path = (login === true ? '/login' : '/signup')
     try {
-      const response = await axiosInstance.post("/login", {
+      const response = await axiosInstance.post(path, {
         email: emailInputText,
         password: passwordInputText
       }, {
@@ -47,8 +49,11 @@ const LoginPage = ({ }) => {
         }
       });
       if (response.status === 200) {
-        // localStorage.setItem("username", username);
-        swal("Successfully logged in!")
+        
+        if(dataContext){
+          const {setRefresh} = dataContext
+          setRefresh(true)
+        }
         navigate('/home');
       } else {
         swal("Login failed", "Please try again", "error")
@@ -59,64 +64,120 @@ const LoginPage = ({ }) => {
     }
   }
 
+  const device = useDeviceType()
+  const googleLoginAvailable = false
+
+  if (device.type == 'mobile') {
+    return (
+      <div className="bg-primaryBudgetoo w-[100dvw] h-[100dvh]">
+        <div className="text-white w-full h-1/5 flex justify-center items-center text-[2rem] font-bold">Welcome to Budgetoo!</div>
+        <div className='bg-white w-full h-4/5 rounded-t-[4rem] flex flex-col items-center'>
+
+          <ToggleButton comparandBase={choseLogin} leftComparand={true} rightComparand={false} leftText='Login' rightText='Signup' leftClickHandler={handleChooseLogin} rightClickHandler={handleChooseSignup} />
+
+          <div className="w-full mt-6 px-12">
+            <div>Username</div>
+            <input className="rounded-full w-full bg-gray-300 h-16 p-4" value={emailInputText} onChange={(e) => setEmailInputText(e.target.value)}></input>
+            <div className="mt-6">Password</div>
+            <input className="rounded-full w-full bg-gray-300 h-16 p-4" type="password" value={passwordInputText} onChange={(e) => setPasswordInputText(e.target.value)}></input>
+
+            {choseLogin ? (
+              <div>
+              </div>
+            ) : (
+              <div>
+                <div className="mt-6">Repeat Password</div>
+                <input className="rounded-full w-full bg-gray-300 h-16 p-4" type="password" value={repeatInputText} onChange={(e) => setRepeatInputText(e.target.value)}></input>
+              </div>
+            )}
+
+
+
+            {googleLoginAvailable && (
+              <div className="flex justify-around pt-4">
+
+                <div className="font-bold flex justify-center mt-8">Or you can choose :</div>
+
+                <div id="g_id_onload"
+                  data-client_id="234249355532-rabgj6tqab4fgg9p76vj5bg75s31rd8p.apps.googleusercontent.com"
+                  data-context="signin"
+                  data-ux_mode="popup"
+                  data-login_uri="http://localhost:8020/v1/google-login"
+                  data-nonce=""
+                  data-auto_prompt="false">
+                </div>
+
+                <div className="g_id_signin"
+                  data-type="standard"
+                  data-shape="rectangular"
+                  data-theme="outline"
+                  data-text="signin_with"
+                  data-size="large"
+                  data-logo_alignment="left">
+                </div>
+
+              </div>
+            )}
+
+            <div className="w-full flex items-center justify-center mt-12">
+              <ButtonDarkOnWhite text={bottomButtonText} className='' onClickHandler={handleBottomButtonClick} />
+            </div>
+
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-primaryBudgetoo w-[100dvw] h-[100dvh]">
-      <div className="text-white w-full h-1/5 flex justify-center items-center text-[3rem] font-bold">Welcome !</div>
-      <div className='bg-white w-full h-4/5 rounded-t-[4rem] flex flex-col items-center'>
+      <div className="text-white w-full h-1/5 flex justify-center items-center text-[2rem] font-bold">Welcome to Budgetoo!</div>
+      <div className='bg-white w-1/2 mx-auto h-4/5 rounded-t-[4rem] flex flex-col items-center'>
 
-        <ToggleButton comparandBase={choseLogin} leftComparand={true} rightComparand={false} leftText='Login' rightText='Signup' leftClickHandler={handleChooseLogin} rightClickHandler={handleChooseSignup} />
+        <ToggleButton comparandBase={choseLogin} leftComparand={true} rightComparand={false} leftText='Login' rightText='Signup' leftClickHandler={handleChooseLogin} rightClickHandler={handleChooseSignup} className='!mt-12 !mb-10' />
 
-        <div className="w-full mt-6 px-12">
-          <div>Username</div>
-          <input className="rounded-full w-full bg-gray-300 h-16 p-4" value={emailInputText} onChange={(e) => setEmailInputText(e.target.value)}></input>
-          <div className="mt-6">Password</div>
-          <input className="rounded-full w-full bg-gray-300 h-16 p-4" type="password" value={passwordInputText} onChange={(e) => setPasswordInputText(e.target.value)}></input>
+        <div className="w-full mt-6 px-[20%]">
+          <div className="mb-4 text-xl">Username</div>
+          <input className="rounded-full w-full bg-gray-300 h-16 p-4 text-xl" value={emailInputText} onChange={(e) => setEmailInputText(e.target.value)}></input>
+          <div className="mt-6 mb-4 text-xl">Password</div>
+          <input className="rounded-full w-full bg-gray-300 h-16 p-4 text-xl" type="password" value={passwordInputText} onChange={(e) => setPasswordInputText(e.target.value)}></input>
 
           {choseLogin ? (
-            //Login
             <div>
-
             </div>
           ) : (
-            //Signup
             <div>
-              <div className="mt-6">Repeat Password</div>
-              <input className="rounded-full w-full bg-gray-300 h-16 p-4" type="password" value={repeatInputText} onChange={(e) => setRepeatInputText(e.target.value)}></input>
+              <div className="mt-6 mb-4 text-xl">Repeat Password</div>
+              <input className="rounded-full w-full bg-gray-300 h-16 p-4 text-xl" type="password" value={repeatInputText} onChange={(e) => setRepeatInputText(e.target.value)}></input>
             </div>
           )}
 
-          <div className="font-bold flex justify-center mt-8">Or you can choose :</div>
-          <div className="flex justify-around pt-4">
-            {/* <ButtonDarkOnWhite text="Google" style='w-1/3' /> */}
+          {googleLoginAvailable && (
 
-            {/* <GoogleLogin
-              onSuccess={(credentialResponse) => {
-                handleGoogleSuccess(credentialResponse);
-              }}
-              onError={() => {
-                handleGoogleError()
-              }}
-            /> */}
+            <div className="flex justify-around pt-4">
 
-            <div id="g_id_onload"
-              data-client_id="234249355532-rabgj6tqab4fgg9p76vj5bg75s31rd8p.apps.googleusercontent.com"
-              data-context="signin"
-              data-ux_mode="popup"
-              data-login_uri="http://localhost:8020/v1/google-login"
-              data-nonce=""
-              data-auto_prompt="false">
+              <div className="font-bold flex justify-center mt-8">Or you can choose :</div>
+
+              <div id="g_id_onload"
+                data-client_id="234249355532-rabgj6tqab4fgg9p76vj5bg75s31rd8p.apps.googleusercontent.com"
+                data-context="signin"
+                data-ux_mode="popup"
+                data-login_uri="http://localhost:8020/v1/google-login"
+                data-nonce=""
+                data-auto_prompt="false">
+              </div>
+
+              <div className="g_id_signin"
+                data-type="standard"
+                data-shape="rectangular"
+                data-theme="outline"
+                data-text="signin_with"
+                data-size="large"
+                data-logo_alignment="left">
+              </div>
+
             </div>
-
-            <div className="g_id_signin"
-              data-type="standard"
-              data-shape="rectangular"
-              data-theme="outline"
-              data-text="signin_with"
-              data-size="large"
-              data-logo_alignment="left">
-            </div>
-            {/* <ButtonDarkOnWhite text="Facebook" style='w-1/3' /> */}
-          </div>
+          )}
 
           <div className="w-full flex items-center justify-center mt-12">
             <ButtonDarkOnWhite text={bottomButtonText} className='' onClickHandler={handleBottomButtonClick} />
@@ -126,6 +187,7 @@ const LoginPage = ({ }) => {
       </div>
     </div>
   )
+
 
 }
 

@@ -21,12 +21,7 @@ const AddPage = () => {
     return <div>Loading...</div>; // TODO some other fallback UI
   }
   const { data, setData } = dataContext
-  const [categories, setCategories] = useState(Object.keys(data.expenses) || defaultCategories)
-
-  useEffect(() => {
-    setCategories(Object.keys(data.expenses))
-  }, [data])
-
+  const [categories, setCategories] = useState(defaultCategories)
 
   const [editableItem, setEditableItem] = useState(location.state || {})
 
@@ -86,7 +81,12 @@ const AddPage = () => {
   });
 
   const confirmExpense = async () => {
-    const success = await data.API.saveExpenses([expenseName, amount, currency], isEditing, indexForEditing, selectedCategory)
+    var success = false
+    if(selectedMonth == data.month && selectedYear == data.year){
+      success = await data.API.saveExpenses([expenseName, amount, currency], isEditing, indexForEditing, selectedCategory)
+    }else{
+      success = await data.API.addExpense(selectedYear, selectedMonth, selectedCategory, expenseName, amount, currency)
+    }
 
     if (!success) {
       Swal.fire('Failed to add transaction', '', 'error')
@@ -96,7 +96,12 @@ const AddPage = () => {
   }
 
   const confirmIncome = async () => {
-    const success = await data.API.saveIncome([expenseName, amount, currency], isEditing, indexForEditing)
+    var success = false
+    if(selectedMonth == data.month && selectedYear == data.year){
+      success = await data.API.saveIncome([expenseName, amount, currency], isEditing, indexForEditing)
+    }else{
+      success = await data.API.addIncome(selectedYear, selectedMonth, expenseName, amount, currency)
+    }
 
     if (!success) {
       Swal.fire('Failed to add transaction', '', 'error')
@@ -127,13 +132,52 @@ const AddPage = () => {
 
   const device = useDeviceType()
 
-  if (device.type == 'mobile') {
-    return (<AddPageMobile data={data} confirmTransaction={confirmTransaction} active={active} setActive={setActive} transactionType={transactionType} isEditing={isEditing} indexForEditing={indexForEditing} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} currency={currency} setCurrency={setCurrency} amount={amount} setAmount={setAmount} expenseName={expenseName} setExpenseName={setExpenseName} categories={categories} handleCancelButton={handleCancelButton}/>)
+  const [selectedMonth, setSelectedMonth] = useState(data?.month);
+  const [selectedYear, setSelectedYear] = useState(data?.year);
+
+  const displayMonth = selectedMonth ? `${selectedMonth}`.padStart(2, '0') : 'MM';
+
+  const handleMonthYearChange = (event) => {
+    const [year, month] = event.target.value.split('-'); // Parse the year and month from the YYYY-MM format
+    setSelectedMonth(Number(month)); // Convert month to a number
+    setSelectedYear(Number(year));   // Convert year to a number
+
+  };
+
+  const commonProps = {
+    data,
+    confirmTransaction,
+    active,
+    setActive,
+    selectedCategory,
+    setSelectedCategory,
+    currency,
+    setCurrency,
+    amount,
+    setAmount,
+    expenseName,
+    setExpenseName,
+    categories,
+    handleCancelButton,
+    selectedYear,
+    displayMonth,
+    handleMonthYearChange,
+  };
+  
+  if (device.type === 'mobile') {
+    return (
+      <AddPageMobile
+        {...commonProps}
+        transactionType={transactionType}
+        isEditing={isEditing}
+        indexForEditing={indexForEditing}
+      />
+    )
   }
-
-  return (<AddPageDesktop data={data} confirmTransaction={confirmTransaction} active={active} setActive={setActive} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} currency={currency} setCurrency={setCurrency} amount={amount} setAmount={setAmount} expenseName={expenseName} setExpenseName={setExpenseName} categories={categories} handleCancelButton={handleCancelButton}/>)
-
+  
+  return <AddPageDesktop {...commonProps} />
 
 }
+  
 
 export default AddPage

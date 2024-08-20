@@ -60,7 +60,6 @@ const TransactionsContainerDesktop = ({ data, countTransactions, getColorForCate
 
   const handleExpenseClick = (element, index) => {
 
-    console.log(desktopSelectedExpense)
     //Cancel action if one element is already selected
     if (desktopSelectedExpense) {
       return
@@ -128,7 +127,7 @@ const TransactionsContainerDesktop = ({ data, countTransactions, getColorForCate
             {(data.income.length == 0 &&
               (<div className='w-1/3 h-fit flex items-center justify-around'>
                 <span>No income tracked this month. </span>
-                <button className='bg-accentBudgetoo text-white p-2 rounded-3xl' onClick={handleGenerateTemplate}>Generate template?</button>
+                <button className='bg-accentBudgetoo text-white p-2 rounded-3xl' onClick={()=>handleGenerateTemplate(true)}>Generate template?</button>
               </div>))}
             {data.income.map(([incomeName, amount, currency], index) => {
               return ((desktopIncomeIndex != null && desktopIncomeIndex == index) ? (
@@ -145,7 +144,7 @@ const TransactionsContainerDesktop = ({ data, countTransactions, getColorForCate
                       <option value="USD">USD</option>
                       <option value="RON">RON</option>
                     </select>
-                    <input className='col-span-2 text-right text-2xl bg-gray-100 rounded-xl' value={desktopSelectedIncome[1]} onChange={(e) => { setDesktopSelectedIncome(oldValue => { const newValue = [...oldValue]; newValue[1] = e.target.value; return newValue; }) }}></input>
+                    <input className='col-span-2 text-right text-2xl bg-gray-100 rounded-xl' value={desktopSelectedIncome[1]} onChange={(e) => { setDesktopSelectedIncome(oldValue => { const newValue = [...oldValue]; newValue[1] = e.target.value; return newValue; }) }} type="number"></input>
                   </div>
 
                   <div className=''>
@@ -172,10 +171,11 @@ const TransactionsContainerDesktop = ({ data, countTransactions, getColorForCate
             )}
 
 
-            {data.incomeFromFamily &&
-              Object.entries(data.incomeFromFamily).map(([nickname, incomes], index) => (
-                incomes.map(([incomeName, amount, currency]) => (
-                  <div key={`${incomeName}${index}`} className="bg-emerald-100 rounded-xl w-1/6 drop-shadow-lg h-32 p-4 grid grid-rows-2 gap-4" onClick={() => { }}>
+            {data.incomeFromFamily && data.incomeFromFamily.length!=0 &&
+              Object.entries(data.incomeFromFamily).map(([id, incomes], index) => {
+                const nickname = data.familyMembers[id]
+                return (incomes.map(([incomeName, amount, currency]) => (
+                  <div key={`${incomeName}${index}`} className="bg-emerald-100 rounded-xl w-fit drop-shadow-lg h-32 p-4 grid grid-rows-2 gap-4" onClick={() => { }}>
                     <div className='text-2xl col-span-7'>{`${nickname}'s ${incomeName}`}</div>
                     <div>
                       <span className='col-span-2 rounded-3xl bg-primaryBudgetoo py-2 px-2 mr-4 '>{currency}</span>
@@ -183,7 +183,8 @@ const TransactionsContainerDesktop = ({ data, countTransactions, getColorForCate
                     </div>
                   </div>
                 ))
-              )
+                )
+              }
               )
             }
 
@@ -196,7 +197,7 @@ const TransactionsContainerDesktop = ({ data, countTransactions, getColorForCate
             <span className='text-2xl font-bold'>Expenses</span>
             <div className='mt-10 p-4'>
               {Object.entries(data.expenses).length === 0 && (
-                <div className='w-full h-fit flex items-center justify-around'>
+                <div className='w-1/3 h-fit flex items-center justify-around'>
                   <span>No expenses tracked this month. </span>
                   <button
                     className='bg-accentBudgetoo text-white p-2 rounded-3xl'
@@ -231,7 +232,7 @@ const TransactionsContainerDesktop = ({ data, countTransactions, getColorForCate
                       }}
                     >
                       <div className='grid grid-cols-12 h-full mx-4 mr-8'>
-                        <div className='col-span-3 mr-4'>
+                        <div className='col-span-3 mr-4 max-w-24'>
                           <CircularProgressBar
                             percentage={percentageOfTotal}
                             imgSrc={imgSrc}
@@ -282,7 +283,7 @@ const TransactionsContainerDesktop = ({ data, countTransactions, getColorForCate
                           <option value="USD">USD</option>
                           <option value="RON">RON</option>
                         </select>
-                        <input className="text-2xl text-center w-1/3 rounded-xl" value={desktopSelectedExpense[1]} onChange={(e) => setDesktopSelectedExpense(oldValue => { const newValue = [...oldValue]; newValue[1] = e.target.value; return newValue; })} />
+                        <input className="text-2xl text-center w-1/3 rounded-xl" value={desktopSelectedExpense[1]} onChange={(e) => setDesktopSelectedExpense(oldValue => { const newValue = [...oldValue]; newValue[1] = e.target.value; return newValue; })} type="number"/>
                         <button className='mx-4 bg-primaryBudgetoo py-3 px-5 rounded-xl' onClick={() => handleDesktopExpenseSave([desktopSelectedExpense[0], desktopSelectedExpense[1], desktopSelectedExpense[2]], index, desktopViewedCategory.name)}>Save</button>
                         <button className='mx-4 bg-red-400 p-3 rounded-xl' onClick={() => handleDesktopExpenseDelete(desktopViewedCategory, index)}>Delete</button>
                         <button className='mx-4 bg-gray-400 p-3 rounded-xl' onClick={() => handleDesktopExpenseCancel()}>Cancel</button>
@@ -299,17 +300,23 @@ const TransactionsContainerDesktop = ({ data, countTransactions, getColorForCate
                 })}
 
                 {desktopViewedCategory && data.expensesFromFamily &&
-                  Object.entries(data.expensesFromFamily).map(([nickname, expenses], index) => (
-                    <div className='gap-2 grid'>
-                      <div className='text-xl italic text-emerald-900 font-bold mb-2 mt-4'>{`Expenses added by ${nickname}`}</div>
-                    {expenses[desktopViewedCategory.name].map(([incomeName, amount, currency]) => (
-                      <div key={index} className="flex justify-between w-full" >
-                        <span className="text-2xl">{incomeName}</span>
-                        <span className="text-2xl">{formatCurrency(amount, currency)}</span>
+                  Object.entries(data.expensesFromFamily).map(([id, expenses], index) => {
+                    const nickname = data.familyMembers[id]
+                    if(expenses.length==0){
+                      return
+                    }
+                    return (
+                      <div className='gap-2 grid'>
+                        <div className='text-xl italic text-emerald-900 font-bold mb-2 mt-4'>{`Expenses added by ${nickname}`}</div>
+                        {expenses[desktopViewedCategory.name].map(([incomeName, amount, currency]) => (
+                          <div key={index} className="flex justify-between w-full" >
+                            <span className="text-2xl">{incomeName}</span>
+                            <span className="text-2xl">{formatCurrency(amount, currency)}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                    </div>
-                  )
+                    )
+                  }
                   )
                 }
               </div>

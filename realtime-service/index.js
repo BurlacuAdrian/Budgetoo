@@ -3,9 +3,10 @@ const nodemailer = require('nodemailer');
 const { promisify } = require('util');
 const express = require('express');
 const app = express();
-const { db, Models } = require('../db/db.js');
+const { Models } = require('../db/db.js');
 const jwt = require('jsonwebtoken');
 const { default: mongoose } = require('mongoose');
+const { server } = require('./socketio.js');
 
 const INVITE_SECRET_KEY = process.env.INVITE_SECRET_KEY
 
@@ -26,13 +27,13 @@ const getInvitationMailOptions = async (sender, receiver) => {
                 console.error('Error signing JWT token:', err);
                 reject(false);
             } else {
-                const invitationUrl = `http://localhost:8020/v1/accept-invite/${token}`;
-                
+                const invitationUrl = `${process.env.CORS_ALLOW_ORIGIN}/v1/accept-invite/${token}`;
+
                 resolve({
                     from: `"Budgetoo" <${process.env.EMAIL_ADDRESS}>`,
                     to: receiver,
                     subject: `Budget together invitation!`,
-                    html:  `
+                    html: `
                     <html>
                     <body style="font-family: Arial, sans-serif; color: #333;">
                         <h2>You're Invited!</h2>
@@ -131,11 +132,17 @@ app.get('/v1/accept-invite/:token', async (req, res, next) => {
                 return res.status(404).json({ error: 'Sender or receiver not found' });
             }
 
+            // Check if the receiver is already part of a family
+            const existingFamily = await Models.Family.findOne({ users: receiver._id });
+            if (existingFamily) {
+                return res.status(403).json({ error: 'Receiver is already part of another family.' });
+            }
+
             // Find the family where the sender is a member
             let family = await Models.Family.findOne({ users: sender._id });
 
             if (family) {
-                // Check if the receiver is already a member
+                // Check if the receiver is already a member (double check, though this should never happen now)
                 if (!family.users.includes(receiver._id)) {
                     // Add receiver to the family and save
                     family.users.push(receiver._id);
@@ -160,8 +167,45 @@ app.get('/v1/accept-invite/:token', async (req, res, next) => {
     }
 });
 
+app.post('/v1/leave', async (req, res, next) => {
+    try {
+        const verified = JSON.parse(req.header('Verified'));
+        const { _id } = verified
+
+        const family = await Models.Family.findOne({ users: _id });
+
+        if (!family) {
+            return res.status(404).json({ message: 'Not part of a family.' });
+        }
+
+        const userIdToRemove = new mongoose.Types.ObjectId(_id);
+
+        if (family.users.some(user => user.equals(userIdToRemove))) {
+            family.users = family.users.filter(user => !user.equals(userIdToRemove));
+
+            if (family.users.length >= 2) {
+                await family.save();
+            } else {
+                await family.deleteOne();
+            }
+        }
+
+
+        return res.status(200).json({ message: 'Successfully left.' });
+
+    } catch (error) {
+        console.error('Error in /v1/leave route:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 const PORT = process.env.RT_MS_PORT || 8024;
 app.listen(PORT, () => {
     console.log(`Realtime-service running on port ${process.env.RT_MS_PORT}`);
 });
+
+
+const SOCKET_IO_PORT = process.env.SOCKET_IO_PORT || 8025
+server.listen(SOCKET_IO_PORT, () => {
+    console.log(`Socket io server listening on port ${SOCKET_IO_PORT}`)
+})

@@ -9,6 +9,11 @@ const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt')
 const {db, Models} = require('../db/db.js')
 
+/*  
+    For authorization :
+    "Verified" header contains {..., sub: email, _id,}
+*/
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -74,7 +79,7 @@ app.post('/v1/signup', async (req, res) => {
     const newUser = new Models.User({password_hash, email, type: 'b'})
     await newUser.save()
 
-    jwt.sign({ sub: email, iss: 'https://budgetoo.eu', _id: newUser._id,email: newUser._id}, JWT_SECRET_KEY, { expiresIn: '30d' }, (err, token) => {
+    jwt.sign({ sub: email, iss: 'https://budgetoo.eu', _id: newUser._id,email: newUser.email}, JWT_SECRET_KEY, { expiresIn: '30d' }, (err, token) => {
       if (err) {
         console.error('Error signing JWT token:', err);
         return res.status(500).json({ error: 'Error signing JWT token' });
@@ -162,6 +167,12 @@ app.post('/v1/google-login', verifyGoogleToken, (req, res) => {
   const { credential } = req.body
   const expirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days in milliseconds
       return res.cookie('Authorization', `Bearer ${credential}`, { expires: expirationDate, ...JWT_COOKIE_OPTIONS }).status(200).redirect('http://localhost:5173/home');
+});
+
+
+app.post('/v1/logout', (req, res) => {
+  res.clearCookie('Authorization', JWT_COOKIE_OPTIONS);
+  return res.status(200).json({ message: 'Successfully logged out' });
 });
 
 

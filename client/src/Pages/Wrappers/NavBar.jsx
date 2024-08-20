@@ -28,8 +28,11 @@ function NavBar() {
   }, [location.pathname])
 
   useEffect( () => {
-    if( !(location.pathname == '/login' || location.pathname == '/signup')){
-      // navigate('/home')
+    // if( !(location.pathname == '/login' || location.pathname == '/signup')){
+    //   navigate('/home')
+    // }
+    if(location.pathname == '/view'){
+      navigate('/home')
     }
   }, [device.type])
 
@@ -82,12 +85,12 @@ function NavBar() {
 
   if (device.type == 'mobile') {
     return (<div className='bg-accentBudgetoo w-full h-[10%] bottom-0 fixed rounded-t-[3rem] px-8 gap-4 items-center flex justify-around'>
-      <div className=' grid grid-cols-2 gap-4'>
-        <div className='flex flex-col items-center' onClick={handleBudgetButton}>
+      <div className=' grid grid-cols-2 gap-4 w-full'>
+        <div className='flex flex-col items-center w-10 sm:w-16 mx-auto' onClick={handleBudgetButton}>
           <img src={getImgStyle('wallet', '/home')} className=''></img>
           <span className={getSpanStyle('/home')} >Budget</span>
         </div>
-        <div className='flex flex-col items-center' onClick={handlePaymentsButton}>
+        <div className='flex flex-col items-center w-10 sm:w-16 mx-auto' onClick={handlePaymentsButton}>
           <img src={getImgStyle('cash', '/payments')} className=''></img>
           <span className={getSpanStyle('/payments')} >Payments</span>
         </div>
@@ -100,12 +103,12 @@ function NavBar() {
 
         <span className='text-white'></span>
       </div>
-      <div className=' grid grid-cols-2 gap-4 items-center'>
-        <div className='flex flex-col items-center' onClick={handleInsightsButton}>
+      <div className=' grid grid-cols-2 gap-4 w-full'>
+        <div className='flex flex-col items-center w-10 sm:w-16 mx-auto' onClick={handleInsightsButton}>
           <img src={getImgStyle('graph', '/insights')} className=''></img>
           <span className={getSpanStyle('/insights')}>Insights</span>
         </div>
-        <div className='flex flex-col items-center' onClick={handleProfileButton}>
+        <div className='flex flex-col items-center w-10 sm:w-16 mx-auto' onClick={handleProfileButton}>
           <img src={getImgStyle('profile', '/profile')} className=''></img>
           <span className={getSpanStyle('/profile')}>Profile</span>
         </div>

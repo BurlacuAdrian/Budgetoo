@@ -4,8 +4,7 @@ import { defaultExpenses, defaultIncome, initialData } from '../../JS/DefaultDat
 import Swal from 'sweetalert2';
 import '../../App.css'
 import {sumAndConvertExpenses, sumAndConvertItems} from '../../JS/Utils.js'
-import useDeviceType from '../../Hooks/useDeviceType.jsx';
-import { useNavigate } from 'react-router-dom';
+import { socket, socketEmitTransactions } from '../../JS/socketio.js';
 
 
 const DataContext = createContext({
@@ -17,20 +16,46 @@ const DataContext = createContext({
   totalSpent: 0,
   isPartOfAFamily: false,
   familyMembers: [],
-  incomeFromFamily: {}
+  incomeFromFamily: {},
+  error: true
 });
 
 
 export const DataProvider = ({ children }) => {
 
+  const [started, setStarted] = useState(false)
+
+  useEffect( () => {
+    if(started===true){
+      socket.connect()
+    }
+    socket.on('receive-changes', newData => {
+      console.log(newData)
+      handleReceiveChanges(newData)
+      
+    })
+  
+    return ()=> {
+      socket.off('receive-changes')
+      socket.disconnect()
+    }
+  }, [])
+
+  useEffect( () => {
+    if(started===true && !(socket?.connected)){
+      socket.connect()
+    }
+  },[started])
+
   const today = new Date();
 
   const [data, setData] = useState(initialData);
+  const [refresh, setRefresh] = useState(false)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth()+1)
   const [selectedYear, setSelectedYear] = useState(today.getFullYear())
-  const [started, setStarted] = useState(false)
+  
 
   const getStartData = async () => {
     try {
@@ -55,12 +80,60 @@ export const DataProvider = ({ children }) => {
         nickname: fetchedData.nickname
       });
 
+      try {
+        if(Object.keys(fetchedData.expenses).length == 0 && fetchedData.income.length == 0){
+          /* Button order is intentionally reversed! Better UX*/
+          const result = await Swal.fire({
+            title: 'Welcome!',
+            text: "It seems that you're new here. Would you like to generate a template for your expenses and income?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'No, thanks',
+            cancelButtonText: 'Yes, generate it!',
+            customClass: {
+              confirmButton: 'swal2-button',
+              cancelButton: 'swal2-button'
+            }
+          });
+        
+          if (result.isConfirmed) {// User clicked 'No, thanks'
+          } else if (result.isDismissed) {// User clicked 'Yes, generate it!'
+            const newData = {
+              ...data,
+              expenses: defaultExpenses,
+              income: defaultIncome
+            }
+            setData(newData)
+            await saveTransactions(newData)
+
+          }
+        }
+          
+      } catch (error) {
+        
+      }
+
     } catch (err) {
       setError(err);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleReceiveChanges = (receivedData) => {
+    console.log('received')
+    const sender = receivedData.sender
+    if(receivedData.month == data.month && receivedData.year == data.year){
+      setData(oldData=>{
+        const newData = {
+          ...oldData,
+        }
+        newData.incomeFromFamily[sender] = receivedData.income
+        newData.expensesFromFamily[sender] = receivedData.expenses
+        return newData
+      })
+    }
+  }
 
   const getTransactions = async () => {
     try {
@@ -72,6 +145,10 @@ export const DataProvider = ({ children }) => {
           budget: fetchedData.budget,
           expenses: fetchedData.expenses,
           income: fetchedData.income,
+          isPartOfAFamily: fetchedData.isPartOfAFamily,
+          familyMembers: fetchedData.familyMembers,
+          incomeFromFamily: fetchedData.incomeFromFamily,
+          expensesFromFamily: fetchedData.expensesFromFamily,
         }
         return newData
       });
@@ -85,15 +162,16 @@ export const DataProvider = ({ children }) => {
 
   useEffect(() => {
     if (window.location.pathname != '/login' && window.location.pathname != '/') {
-      if(!started){
+      if(!started || refresh == true){
         getStartData()
         setStarted(true)
+        setRefresh(false)
       }else{
         getTransactions()
       }
     }
-  // }, [])
-  }, [data.year, data.month])
+  }, [data.year, data.month, refresh])
+
 
   const saveBudget = async (amount, currency) => {
     
@@ -149,6 +227,13 @@ export const DataProvider = ({ children }) => {
     }
 
     setData(newData)
+    const socketData = {
+      year: newData.year,
+      month: newData.month,
+      expenses: newData.expenses,
+      income: newData.income
+    }
+    socketEmitTransactions(socketData)
     return true
   }
 
@@ -163,6 +248,9 @@ export const DataProvider = ({ children }) => {
         currency
       ]
     } else {
+      if(!(newExpenses[selectedCategory])){
+        newExpenses[selectedCategory]=[]
+      }
       newExpenses[selectedCategory].push([
         expenseName,
         amount,
@@ -182,7 +270,13 @@ export const DataProvider = ({ children }) => {
     }
 
     setData(newData)
-
+    const socketData = {
+      year: newData.year,
+      month: newData.month,
+      expenses: newData.expenses,
+      income: newData.income
+    }
+    socketEmitTransactions(socketData)
     return true
   }
 
@@ -259,9 +353,84 @@ export const DataProvider = ({ children }) => {
     }
   }
 
-  useEffect( () => {
-    console.log(data)
-  },[data])
+  const leaveFamily = async () => {
+    try {
+      const response = await axiosInstance.post(`/leave`)
+      if (response.status != 200) {
+        return false
+      }
+      setData(oldData=>{
+        const newData = {
+          ...oldData,
+          isPartOfAFamily: false,
+          familyMembers: {}
+        }
+        return newData
+      })
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+
+  const addExpense = async (year, month, category, name, amount, currency) => {
+    try {
+      const response = await axiosInstance.put('/expense', {
+        year,
+        month,
+        category,
+        name,
+        amount,
+        currency
+      });
+      
+      if (response.status !== 200) {
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      return false;
+    }
+  }
+
+  const addIncome = async (year, month, name, amount, currency) => {
+    try {
+      const response = await axiosInstance.put('/income', {
+        year,
+        month,
+        name,
+        amount,
+        currency
+      });
+      
+      if (response.status !== 200) {
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error adding income:', error);
+      return false;
+    }
+  }
+
+  const saveTransactions = async (newData) => {
+    try {
+      console.log(newData)
+      const response = await axiosInstance.put(`/transactions`, newData)
+
+  
+      if (response.status != 200) {
+        Swal.fire('Failed to save transactions', '', 'error')
+        return false
+      }
+      return true
+    } catch (error) {
+      return false
+    }
+  }
 
   // Auto-update data when expenses or income change
   useEffect(() => {
@@ -271,7 +440,6 @@ export const DataProvider = ({ children }) => {
           ...oldData,
           // totalSpent: calculateTotalSpent(data.expenses)
           totalSpent: sumAndConvertExpenses(data.expenses, data.mainCurrency, data.currencyTable)
-
         }
         return newData
       });
@@ -289,9 +457,13 @@ export const DataProvider = ({ children }) => {
         deleteIncomeByIndex,
         deleteExpenseByCategoryAndIndex,
         sendInvite,
-        saveNickname
+        saveNickname,
+        leaveFamily,
+        addExpense,
+        addIncome,
+        saveTransactions
       }
-    }, setData, loading, error, 
+    }, setData, loading, error, setRefresh 
   };
 
 

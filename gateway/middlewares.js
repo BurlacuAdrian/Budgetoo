@@ -15,12 +15,12 @@ if(!(JWT_SECRET_KEY)){
 /* 
   Synonymous with
   app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: process.env.CORS_ALLOW_ORIGIN,
     credentials: true
   }))
 */
 const corsHandler = (req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.header("Access-Control-Allow-Origin", process.env.CORS_ALLOW_ORIGIN);
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Credentials", "true");

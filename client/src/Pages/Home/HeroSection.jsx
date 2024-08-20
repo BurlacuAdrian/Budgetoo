@@ -54,7 +54,7 @@ const HeroSection = () => {
       <div className='h-[50%] flex flex-col items-center justify-center'>
         <span className='text-white text-[3rem] font-bold'>{displayedTotal}</span>
         {/* <span className='text-gray-300 text-[2rem] font-bold underline '>{`${getMonthName(data?.month)}`}</span> */}
-        {/* <MonthsSlider data={data} setData={setData} /> */}
+        <MonthsSlider data={data} setData={setData} />
       </div>
       <div className='h-[20%] px-4' >
         <div className='flex justify-between px-6 mb-4'>
@@ -82,7 +82,7 @@ const HeroSection = () => {
 
       <div className='w-full h-full flex justify-around items-center'>
         <div className='flex items-center justify-around gap-40'>
-          <input type='month' value={`${selectedYear}-${displayMonth}`} onChange={handleMonthYearChange} className='text-[1.5rem] ' autoFocus />
+          <input type='month' value={`${selectedYear}-${displayMonth}`} onChange={handleMonthYearChange} className='text-[1.5rem] ' />
 
           <span className='text-white text-[3rem] bg-primaryBudgetoo py-8 px-16 rounded-[3rem]'>{displayedTotal}</span>
         </div>

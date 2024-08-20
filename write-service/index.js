@@ -79,6 +79,99 @@ app.put('/v1/nickname/:nickname', async (req, res, next) => {
   }
 });
 
+app.put('/v1/expense', async (req, res) => {
+  try {
+    const verified = JSON.parse(req.header('Verified'));
+    const { _id } = verified;
+    const { year, month, category, name, amount, currency } = req.body;
+
+    
+    if (!year || !month || !category || !name || !amount || !currency) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    
+    let transaction = await Models.Transaction.findOne({ user_id: _id, year, month });
+
+    if (transaction) {
+      
+      if (!transaction.expenses[category]) {
+        
+        transaction.expenses[category] = [];
+      }
+
+      
+      transaction.expenses[category].push([name, amount, currency]);
+
+      
+      await transaction.save();
+    } else {
+      
+      const newTransaction = new Models.Transaction({
+        user_id: _id,
+        year,
+        month,
+        expenses: {
+          [category]: [[name, amount, currency]],
+        },
+        income: [],
+        budget: 3000 
+      });
+
+      await newTransaction.save();
+    }
+
+    return res.status(200).json({ message: 'Expense added/updated successfully' });
+  } catch (error) {
+    console.error('Error adding/updating expense:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+app.put('/v1/income', async (req, res) => {
+  try {
+    const verified = JSON.parse(req.header('Verified'));
+    const { _id } = verified;
+    const { year, month, name, amount, currency } = req.body;
+
+    
+    if (!year || !month || !name || !amount || !currency) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    
+    let transaction = await Models.Transaction.findOne({ user_id: _id, year, month });
+
+    if (transaction) {
+      
+      transaction.income.push([name, amount, currency]);
+
+      
+      await transaction.save();
+    } else {
+      
+      const newTransaction = new Models.Transaction({
+        user_id: _id,
+        year,
+        month,
+        expenses: {},
+        income: [[name, amount, currency]],
+        budget: 3000 
+      });
+
+      
+      await newTransaction.save();
+    }
+
+    return res.status(200).json({ message: 'Income added/updated successfully' });
+  } catch (error) {
+    console.error('Error adding/updating income:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 
 const PORT = process.env.WRITE_MS_PORT || 8023;
 app.listen(PORT, () => {

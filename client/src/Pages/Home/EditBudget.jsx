@@ -30,6 +30,7 @@ const EditBudget = ({closeModal, data}) => {
         />
       </div>
 
+
       <div className="mb-4">
         <label className="block text-sm font-medium mb-1" htmlFor="currency">
           Currency
@@ -45,6 +46,9 @@ const EditBudget = ({closeModal, data}) => {
           <option value="RON">RON</option>
         </select>
       </div>
+
+      <div className='mb-4'>Tip: Editing the currency here will also change the main currency in which the overall and per category total will be displayed in.</div>
+
 
       <div className="flex justify-end">
         <button

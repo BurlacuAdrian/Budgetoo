@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { convertAndCalculatePercentageOfTotal} from '../../../JS/Utils.js'
 import { useDataContext } from '../../Wrappers/DataContext.jsx';
-import { defaultExpenses } from '../../../JS/DefaultData.js';
+import { defaultExpenses, defaultIncome } from '../../../JS/DefaultData.js';
 import useDeviceType from '../../../Hooks/useDeviceType.jsx'
 import Swal from 'sweetalert2';
 import TransactionsContainerDesktop from './TransactionsContainerDesktop.jsx';
@@ -38,8 +38,17 @@ const TransactionsContainer = () => {
   const device = useDeviceType()
   const [desktopViewedCategory, setDesktopViewedCategory] = useState({ name: null, items: [] })
 
-  const handleGenerateTemplate = () => {
-    setData(oldData => ({ ...oldData, expenses: defaultExpenses }))
+  const handleGenerateTemplate = async (forIncome = false) => {
+    if(forIncome === true){
+      const newData = { ...data, income: defaultIncome }
+      setData(newData)
+      await data.API.saveTransactions(newData)
+      return
+    }
+
+    const newData = { ...data, expenses: defaultExpenses }
+    setData(newData)
+    await data.API.saveTransactions(newData)
   }
 
   const [percentageOfBudget, setPercentageOfBudget] = useState(0)

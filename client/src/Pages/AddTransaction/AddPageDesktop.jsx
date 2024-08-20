@@ -1,8 +1,8 @@
-import {getSVGForCategory } from "../../JS/Utils"
+import { getSVGForCategory } from "../../JS/Utils"
 import ButtonDarkOnWhite from "../../Components/ButtonDarkOnWhite"
 import ToggleButton from "../../Components/ToggleButton"
 
-const AddPageDesktop = ({data, confirmTransaction, active, setActive, selectedCategory, setSelectedCategory, currency, setCurrency, amount, setAmount, expenseName, setExpenseName, categories, handleCancelButton}) => {
+const AddPageDesktop = ({ data, confirmTransaction, active, setActive, selectedCategory, setSelectedCategory, currency, setCurrency, amount, setAmount, expenseName, setExpenseName, categories, handleCancelButton, selectedYear, displayMonth, handleMonthYearChange }) => {
 
   return (
     <div className='w-full h-[80%] flex'>
@@ -62,8 +62,8 @@ const AddPageDesktop = ({data, confirmTransaction, active, setActive, selectedCa
           </div>
 
 
-
-          <div className="flex flex-col justify-center gap-20">
+          <div className="flex flex-col justify-center gap-20 items-center">
+          <input type='month' value={`${selectedYear}-${displayMonth}`} onChange={handleMonthYearChange} className='text-[1.5rem] my-2' />
             <ButtonDarkOnWhite text="Confirm" className="mt-4 w-2/3" onClickHandler={confirmTransaction} />
             <ButtonDarkOnWhite text="Cancel" className="mt-4 w-2/3" onClickHandler={handleCancelButton} />
           </div>

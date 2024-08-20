@@ -5,6 +5,8 @@ import useDeviceType from "../../Hooks/useDeviceType"
 import { useEffect, useState } from "react"
 import AddMemberModal from "./AddMemberModal"
 import Swal from "sweetalert2"
+import axiosInstance from "../../JS/axiosInstance"
+import { socket } from "../../JS/socketio"
 
 const ProfilePage = () => {
 
@@ -22,11 +24,25 @@ const ProfilePage = () => {
     navigate('/home')
   }
 
-  const handleLogoutButton = () => {
-
-    //TODO add logic
-    navigate('/login')
-  }
+  const handleLogoutButton = async () => {
+    try {
+      const response = await axiosInstance.post('/logout');
+      socket.disconnect()
+      if (response.status === 200) {
+        Swal.fire({
+          title: 'Logged Out',
+          text: 'You have been successfully logged out.',
+          icon: 'success',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          
+          navigate('/login');
+        });
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  };
 
   const username = "John Smith"
 
@@ -66,11 +82,21 @@ const ProfilePage = () => {
   }
 
   const [editingNickname, setEditingNickname] = useState(false)
-  // const [nickname, setNickname] = useState(data.nickname)
+  const [nickname, setNickname] = useState(data.nickname)
 
-  // useEffect( () => {
-  //   console.log(data)
-  // },[data])
+  const handleLeaveFamily = async () => {
+    try {
+      const success = await data.API.leaveFamily();
+
+      if (success === true) {
+        Swal.fire('Successfully left', '', 'success');
+      } else {
+        Swal.fire('Could not leave', '', 'error');
+      }
+    } catch (error) {
+      Swal.fire('Something went wrong', 'Please try again later.', 'error');
+    }
+  }
 
   if (device.type == 'mobile') {
     return (
@@ -89,7 +115,7 @@ const ProfilePage = () => {
             }
             {editingNickname && (
               <span>
-                <input value={nickname} onChange={(e)=>setNickname(e.target.value)} className="bg-gray-100 p-2 rounded-xl"/>
+                <input value={nickname} onChange={(e)=>setNickname(e.target.value)} className="bg-gray-100 p-2 rounded-xl" placeholder="Enter a new nickname"/>
                 <div className="flex justify-around w-full gap-12">
                   <button className="bg-red-200 py-2 px-4 rounded-xl" onClick={()=>setEditingNickname(false)}>Cancel</button>
                   <button className="bg-green-200 py-2 px-4 rounded-xl" onClick={handleSaveNickname}>Save</button>
@@ -99,12 +125,12 @@ const ProfilePage = () => {
 
             <div className="col-span-3 flex flex-col gap-4 mt-6">
               {/* <div className="col-span-3 text-2xl">Email</div> */}
-              <div className="col-span-3 text-3xl">Email : {data.email}</div>
+              <div className="col-span-3 text-xl">Email : {data.email}</div>
             </div>
           </div>
 
           <div className="w-full ">
-            <h1 className="text-[2rem] mt-8 mb-4">Family budgeting</h1>
+            <h1 className="text-[2rem] mt-0 mb-4">Family budgeting</h1>
             {data.isPartOfAFamily === false && (
               <div>Currently not part of a family. It's better together!</div>
             )}
@@ -113,15 +139,20 @@ const ProfilePage = () => {
               <div>
                 <div className="text-xl">Members:</div>
                 <ul>
-                  {data.familyMembers.map((memberName, index) => {
+                {Object.entries(data.familyMembers).map(([memberId, memberName], index) => {
                     return <div>{memberName}</div>
                   })}
                 </ul>
+                <div className="w-full flex mt-2 gap-4">
+                  <ButtonDarkOnWhite className={'bg-red-400 text-center'} onClickHandler={handleLeaveFamily} text={"Leave budget together"} />
+                  <ButtonDarkOnWhite className={'text-center'} onClickHandler={openAddMemberPopup} text={data.isPartOfAFamily ? 'Invite another user' : 'Budget together!'} />
+                  
+                </div>
               </div>
             )}
           </div>
-          <ButtonDarkOnWhite className={'mt-10'} onClickHandler={openAddMemberPopup} text={data.isPartOfAFamily ? 'Invite another user' : 'Budget together!'} />
 
+          {!(data.isPartOfAFamily) && <ButtonDarkOnWhite className={'text-center mt-4'} onClickHandler={openAddMemberPopup} text={data.isPartOfAFamily ? 'Invite another user' : 'Budget together!'} />}
           <ButtonDarkOnWhite className={'mt-10 bg-red-400'} onClickHandler={handleLogoutButton} text={"Logout"} />
 
           {isAddMemberModalVisible && <AddMemberModal closeModal={closeAddMemberPopup} data={data} setData={setData} />}
@@ -174,11 +205,13 @@ const ProfilePage = () => {
           <div>
             <div className="text-xl">Members:</div>
             <ul>
-              {data.familyMembers.map((memberName, index) => {
+              {Object.entries(data.familyMembers).map(([memberId, memberName], index) => {
                 return <div>{memberName}</div>
               })}
             </ul>
+            <ButtonDarkOnWhite className={'mt-10 bg-red-400'} onClickHandler={handleLeaveFamily} text={"Leave budget together"} />
           </div>
+          
         )}
         <ButtonDarkOnWhite className={'mt-10'} onClickHandler={openAddMemberPopup} text={data.isPartOfAFamily ? 'Invite another user' : 'Budget together!'} />
       </div>
