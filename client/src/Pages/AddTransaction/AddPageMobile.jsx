@@ -65,9 +65,9 @@ const AddPageMobile = ({data, confirmTransaction, active, setActive, transaction
 
 
   return (
-    <div className='bg-primaryBudgetoo h-[100dvh] w-[100dvw] flex flex-col'>
-      <div className="flex-grow"></div>
-      <div className='bg-white w-full h-[90%] mt-auto rounded-t-[4rem] flex flex-col items-center pt-6 px-8'>
+    <div className='bg-primaryBudgetoo h-[100dvh] w-[100dvw]'>
+      <div className="h-[3rem] max-h-[3rem]"></div>
+      <div className='bg-white w-full mt-auto rounded-t-[4rem] flex flex-col items-center pt-6 px-8 pb-10 h-full'>
 
         <div className="relative w-full flex items-start" onClick={handleCancelButton}>
           <img src='./cancel.svg' className="size-8 inline " />
@@ -77,7 +77,7 @@ const AddPageMobile = ({data, confirmTransaction, active, setActive, transaction
         <ToggleButton comparandBase={active} leftComparand={'Expenses'} rightComparand={'Income'} leftText='Expenses' rightText='Income' leftClickHandler={() => setActive('Expenses')} rightClickHandler={() => setActive('Income')} />
 
 
-        <div className="grid grid-cols-4 p-2 gap-8 mt-4">
+        <div className="grid grid-cols-4 p-2 gap-4 mt-4">
 
           {active === 'Expenses' && (
             <img src={getSVGForCategory(selectedCategory)} className="col-span-1"></img>

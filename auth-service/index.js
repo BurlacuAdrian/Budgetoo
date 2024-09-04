@@ -7,7 +7,8 @@ const { jwtDecode } = require("jwt-decode");
 const jwksClient = require('jwks-rsa');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt')
-const {db, Models} = require('../db/db.js')
+const { db, Models } = require('../db/db.js')
+const {emailSchema, passwordSchema} = require('./joiSchemas.js')
 
 /*  
     For authorization :
@@ -44,7 +45,7 @@ const GOOGLE_SECRET_KEY = process.env.GOOGLE_SECRET_KEY
 const GOOGLE_CERTS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
 
 //TODO update expires to google standard
-const JWT_COOKIE_OPTIONS = { sameSite: 'none', secure: true, httpOnly: true}
+const JWT_COOKIE_OPTIONS = { sameSite: 'none', secure: true, httpOnly: true }
 
 if (!JWT_SECRET_KEY) {
   throw new Error("Cannot start server without providing a JWT secret key");
@@ -57,29 +58,38 @@ if (!(GOOGLE_SECRET_KEY)) {
 
 // Signup endpoint
 app.post('/v1/signup', async (req, res) => {
-
-  let { email, display_name, password } = req.body;
-
-  if (!display_name || display_name.trim() === '') {
-    display_name = email;
-  }
-
   try {
 
-    const queriedUser = await Models.User.findOne({email})
-    if(queriedUser){
-      if(queriedUser.type == 'g'){
+  let { email, password } = req.body;
+
+  // Validate the email
+  const { error: emailError } = emailSchema.validate(email);
+  if (emailError) {
+    return res.status(400).json({ error: emailError.details[0].message });
+  }
+
+  // Validate the password
+  const { error: passwordError } = passwordSchema.validate(password);
+  if (passwordError) {
+    return res.status(400).json({ error: passwordError.details[0].message });
+  }
+
+    const queriedUser = await Models.User.findOne({ email })
+    if (queriedUser) {
+      if (queriedUser.type == 'g') {
         return res.status(400).json({ error: 'A Google account with this email already exists' });
       }
-      return res.status(400).json({ error: 'An account with this username already exists' });
+      return res.status(400).json({ error: 'An account with this email already exists' });
     }
+
+    const nickname = email.split('@')[0]
 
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt)
-    const newUser = new Models.User({password_hash, email, type: 'b'})
+    const newUser = new Models.User({ password_hash, email, type: 'b', nickname})
     await newUser.save()
 
-    jwt.sign({ sub: email, iss: 'https://budgetoo.eu', _id: newUser._id,email: newUser.email}, JWT_SECRET_KEY, { expiresIn: '30d' }, (err, token) => {
+    jwt.sign({ sub: email, iss: 'https://budgetoo.eu', _id: newUser._id, email: newUser.email }, JWT_SECRET_KEY, { expiresIn: '30d' }, (err, token) => {
       if (err) {
         console.error('Error signing JWT token:', err);
         return res.status(500).json({ error: 'Error signing JWT token' });
@@ -96,9 +106,22 @@ app.post('/v1/signup', async (req, res) => {
 
 // Login endpoint
 app.post('/v1/login', async (req, res) => {
-  const { email, password } = req.body;
   try {
-    const queriedUser = await Models.User.findOne({email}).exec()
+  const { email, password } = req.body;
+
+  // Validate the email
+  const { error: emailError } = emailSchema.validate(email);
+  if (emailError) {
+    return res.status(400).json({ error: emailError.details[0].message });
+  }
+
+  // Validate the password
+  const { error: passwordError } = passwordSchema.validate(password);
+  if (passwordError) {
+    return res.status(400).json({ error: passwordError.details[0].message });
+  }
+
+    const queriedUser = await Models.User.findOne({ email }).exec()
 
     if (!queriedUser) {
       return res.status(401).json({ error: 'Invalid username or password' });
@@ -107,13 +130,13 @@ app.post('/v1/login', async (req, res) => {
     if (!correctPassword) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
-    jwt.sign({ sub: email, iss: 'https://budgetoo.eu', _id: queriedUser._id, email: queriedUser.email}, JWT_SECRET_KEY, { expiresIn: '30d' }, (err, token) => {
+    jwt.sign({ sub: email, iss: 'https://budgetoo.eu', _id: queriedUser._id, email: queriedUser.email }, JWT_SECRET_KEY, { expiresIn: '30d' }, (err, token) => {
       if (err) {
         console.error('Error signing JWT token:', err);
         return res.status(500).json({ error: 'Error signing JWT token' });
       }
       const expirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days in milliseconds
-      
+
       res.cookie('Authorization', `Bearer ${token}`, { expires: expirationDate, ...JWT_COOKIE_OPTIONS }).status(200).json('Successfully logged in');
       return res.status(200)
     });
@@ -147,8 +170,8 @@ const verifyGoogleToken = async (req, res, next) => {
       return res.status(401).send('Invalid Token');
     }
 
-    const queriedUser = await Models.User.findOne({g_id: decoded?.sub}).exec()
-    if(!queriedUser){
+    const queriedUser = await Models.User.findOne({ g_id: decoded?.sub }).exec()
+    if (!queriedUser) {
       const newUser = await Models.User.create({
         email: decoded?.email,
         type: 'g',
@@ -166,7 +189,7 @@ const verifyGoogleToken = async (req, res, next) => {
 app.post('/v1/google-login', verifyGoogleToken, (req, res) => {
   const { credential } = req.body
   const expirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days in milliseconds
-      return res.cookie('Authorization', `Bearer ${credential}`, { expires: expirationDate, ...JWT_COOKIE_OPTIONS }).status(200).redirect('http://localhost:5173/home');
+  return res.cookie('Authorization', `Bearer ${credential}`, { expires: expirationDate, ...JWT_COOKIE_OPTIONS }).status(200).redirect('http://localhost:5173/home');
 });
 
 

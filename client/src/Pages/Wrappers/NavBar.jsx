@@ -7,7 +7,7 @@ function NavBar() {
 
   const location = useLocation()
   var dataContext = useDataContext()
-  // var dataConext = useContext(DataC)
+  
   if (!dataContext) {
     console.log(dataContext)
     return <div>Loading hero section...</div>; // TODO some other fallback UI
@@ -16,15 +16,32 @@ function NavBar() {
 
   const device = useDeviceType()
   const navigate = useNavigate()
+  const [isAddButtonVisible, setIsAddButtonVisible] = useState(true)
 
   const getVisibility = () => {
-    //TODO change logic
-    return (location.pathname == '/login' || location.pathname == '/signup' || location.pathname == '/') ? false : true
-  }
+    const pathsToHide = [
+      '/login', 
+      '/signup', 
+      '/', 
+      '/invite-result',
+      '/loading',
+      '/add'
+    ];
+  
+    const isHiddenPath = pathsToHide.includes(location.pathname);
+    
+    return !isHiddenPath;
+  };
 
   useEffect(() => {
-
+    console.log(location.pathname)
     setIsVisible(getVisibility())
+    if(location.pathname=='/add'){
+      console
+      setIsAddButtonVisible(false)
+    }else{
+      setIsAddButtonVisible(true)
+    }
   }, [location.pathname])
 
   useEffect( () => {
@@ -84,7 +101,7 @@ function NavBar() {
   }
 
   if (device.type == 'mobile') {
-    return (<div className='bg-accentBudgetoo w-full h-[10%] bottom-0 fixed rounded-t-[3rem] px-8 gap-4 items-center flex justify-around'>
+    return (<div className='bg-accentBudgetoo w-full h-[10%] bottom-0 fixed rounded-t-[3rem] px-8 gap-4 items-center flex justify-around z-50'>
       <div className=' grid grid-cols-2 gap-4 w-full'>
         <div className='flex flex-col items-center w-10 sm:w-16 mx-auto' onClick={handleBudgetButton}>
           <img src={getImgStyle('wallet', '/home')} className=''></img>
@@ -96,6 +113,7 @@ function NavBar() {
         </div>
       </div>
 
+      {isAddButtonVisible && (
       <div className='' onClick={handleMainAction}>
         <span className='bg-accentBudgetoo rounded-full z-10 block w-24 h-24 relative -top-8 p-4'>
           <img src='./add-white.svg' className=''></img>
@@ -103,6 +121,8 @@ function NavBar() {
 
         <span className='text-white'></span>
       </div>
+      )}
+
       <div className=' grid grid-cols-2 gap-4 w-full'>
         <div className='flex flex-col items-center w-10 sm:w-16 mx-auto' onClick={handleInsightsButton}>
           <img src={getImgStyle('graph', '/insights')} className=''></img>

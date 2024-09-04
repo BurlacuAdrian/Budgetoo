@@ -50,7 +50,7 @@ const HeroSection = () => {
   };
 
   if (device.type == 'mobile') {
-    return (<div className=' w-full h-[35%] flex flex-col justify-around'>
+    return (<div className=' w-full h-[20rem] flex flex-col justify-around'>
       <div className='h-[50%] flex flex-col items-center justify-center'>
         <span className='text-white text-[3rem] font-bold'>{displayedTotal}</span>
         {/* <span className='text-gray-300 text-[2rem] font-bold underline '>{`${getMonthName(data?.month)}`}</span> */}

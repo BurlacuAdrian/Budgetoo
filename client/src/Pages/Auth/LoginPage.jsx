@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ToggleButton from "../../Components/ToggleButton";
 import ButtonDarkOnWhite from "../../Components/ButtonDarkOnWhite";
@@ -7,6 +7,7 @@ import axiosInstance from "../../JS/axiosInstance.js";
 import swal from "sweetalert";
 import useDeviceType from "../../Hooks/useDeviceType.jsx";
 import { useDataContext } from "../Wrappers/DataContext.jsx";
+import LoadingScreen from "../../Components/LoadingScreen.jsx";
 
 const LoginPage = ({ }) => {
 
@@ -27,7 +28,9 @@ const LoginPage = ({ }) => {
     setBottomButtonText('Signup')
   }
 
-  const handleBottomButtonClick = async () => {
+  const handleBottomButtonClick = (event) => {
+    event.preventDefault()
+
     if (choseLogin) {
       handleLogin()
       return
@@ -35,10 +38,15 @@ const LoginPage = ({ }) => {
     handleLogin(false)
   }
 
+
   const dataContext = useDataContext()
 
   const handleLogin = async (login = true) => {
     const path = (login === true ? '/login' : '/signup')
+    setLoading(true)
+    // setTimeout( () => {
+    //   setLoading(false)
+    // }, 1000)
     try {
       const response = await axiosInstance.post(path, {
         email: emailInputText,
@@ -48,24 +56,41 @@ const LoginPage = ({ }) => {
           'Content-Type': 'application/json'
         }
       });
+
       if (response.status === 200) {
         
         if(dataContext){
           const {setRefresh} = dataContext
           setRefresh(true)
         }
+        // console.log("going home")
         navigate('/home');
       } else {
         swal("Login failed", "Please try again", "error")
+        setLoading(false)
       }
     } catch (error) {
-      swal("Login failed", "Please verify your input, make sure you're only use alphanumeric characters and no spaces or special characters for the username", "error")
+      const message = error.response.data.error ? ` : ${error.response.data.error} ` : ''
+      swal(`Login failed ${message}`, `Please verify your input, make sure you're only using alphanumeric characters and no spaces or special characters for the email`, "error")
       console.error('API call error:', error);
+      setLoading(false)
     }
   }
 
   const device = useDeviceType()
   const googleLoginAvailable = false
+
+  const [loading, setLoading] = useState(true)
+
+  useEffect( () => {
+    setTimeout( () => {
+      setLoading(false)
+    }, 1500)
+  }, [])
+
+  if(loading){
+    return <LoadingScreen></LoadingScreen>
+  }
 
   if (device.type == 'mobile') {
     return (
@@ -75,11 +100,11 @@ const LoginPage = ({ }) => {
 
           <ToggleButton comparandBase={choseLogin} leftComparand={true} rightComparand={false} leftText='Login' rightText='Signup' leftClickHandler={handleChooseLogin} rightClickHandler={handleChooseSignup} />
 
-          <div className="w-full mt-6 px-12">
+          <form className="w-full mt-6 px-12">
             <div>Username</div>
-            <input className="rounded-full w-full bg-gray-300 h-16 p-4" value={emailInputText} onChange={(e) => setEmailInputText(e.target.value)}></input>
+            <input className="rounded-full w-full bg-gray-300 h-16 p-4" value={emailInputText} onChange={(e) => setEmailInputText(e.target.value)} type="email" autoComplete="email"></input>
             <div className="mt-6">Password</div>
-            <input className="rounded-full w-full bg-gray-300 h-16 p-4" type="password" value={passwordInputText} onChange={(e) => setPasswordInputText(e.target.value)}></input>
+            <input className="rounded-full w-full bg-gray-300 h-16 p-4" type="password" value={passwordInputText} onChange={(e) => setPasswordInputText(e.target.value)} autoComplete="current-password"></input>
 
             {choseLogin ? (
               <div>
@@ -99,10 +124,10 @@ const LoginPage = ({ }) => {
                 <div className="font-bold flex justify-center mt-8">Or you can choose :</div>
 
                 <div id="g_id_onload"
-                  data-client_id="234249355532-rabgj6tqab4fgg9p76vj5bg75s31rd8p.apps.googleusercontent.com"
+                  data-client_id={process.env.GOOGLE_CLIENT_ID}
                   data-context="signin"
                   data-ux_mode="popup"
-                  data-login_uri="http://localhost:8020/v1/google-login"
+                  data-login_uri={`${process.env.API_URL}/v1/google-login`}
                   data-nonce=""
                   data-auto_prompt="false">
                 </div>
@@ -120,10 +145,11 @@ const LoginPage = ({ }) => {
             )}
 
             <div className="w-full flex items-center justify-center mt-12">
-              <ButtonDarkOnWhite text={bottomButtonText} className='' onClickHandler={handleBottomButtonClick} />
+              {/* <button type="button" onClick={(e)=>handleBottomButtonClick(e)}>{bottomButtonText}</button> */}
+              <ButtonDarkOnWhite text={bottomButtonText} className='' onClickHandler={(e)=>handleBottomButtonClick(e)} />
             </div>
 
-          </div>
+          </form>
         </div>
       </div>
     )
@@ -136,11 +162,11 @@ const LoginPage = ({ }) => {
 
         <ToggleButton comparandBase={choseLogin} leftComparand={true} rightComparand={false} leftText='Login' rightText='Signup' leftClickHandler={handleChooseLogin} rightClickHandler={handleChooseSignup} className='!mt-12 !mb-10' />
 
-        <div className="w-full mt-6 px-[20%]">
-          <div className="mb-4 text-xl">Username</div>
-          <input className="rounded-full w-full bg-gray-300 h-16 p-4 text-xl" value={emailInputText} onChange={(e) => setEmailInputText(e.target.value)}></input>
+        <form className="w-full mt-6 px-[20%]">
+          <div className="mb-4 text-xl">Email</div>
+          <input className="rounded-full w-full bg-gray-300 h-16 p-4 text-xl" value={emailInputText} onChange={(e) => setEmailInputText(e.target.value)} type="email" autoComplete="email"></input>
           <div className="mt-6 mb-4 text-xl">Password</div>
-          <input className="rounded-full w-full bg-gray-300 h-16 p-4 text-xl" type="password" value={passwordInputText} onChange={(e) => setPasswordInputText(e.target.value)}></input>
+          <input className="rounded-full w-full bg-gray-300 h-16 p-4 text-xl" type="password" value={passwordInputText} onChange={(e) => setPasswordInputText(e.target.value)} autoComplete="current-password"></input>
 
           {choseLogin ? (
             <div>
@@ -159,10 +185,10 @@ const LoginPage = ({ }) => {
               <div className="font-bold flex justify-center mt-8">Or you can choose :</div>
 
               <div id="g_id_onload"
-                data-client_id="234249355532-rabgj6tqab4fgg9p76vj5bg75s31rd8p.apps.googleusercontent.com"
+                data-client_id={process.env.GOOGLE_CLIENT_ID}
                 data-context="signin"
                 data-ux_mode="popup"
-                data-login_uri="http://localhost:8020/v1/google-login"
+                data-login_uri={`${process.env.API_URL}/v1/google-login`}
                 data-nonce=""
                 data-auto_prompt="false">
               </div>
@@ -180,10 +206,10 @@ const LoginPage = ({ }) => {
           )}
 
           <div className="w-full flex items-center justify-center mt-12">
-            <ButtonDarkOnWhite text={bottomButtonText} className='' onClickHandler={handleBottomButtonClick} />
+          <ButtonDarkOnWhite text={bottomButtonText} className='' onClickHandler={(e)=>handleBottomButtonClick(e)} />
           </div>
 
-        </div>
+        </form>
       </div>
     </div>
   )

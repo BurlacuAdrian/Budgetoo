@@ -19,7 +19,7 @@ const TransactionsContainerMobile = ({ data, countTransactions, getColorForCateg
   }
 
   return (
-    <div className='bg-white w-full h-[65%] rounded-t-[4rem] flex flex-col items-center'>
+    <div className='bg-white w-full xh-[65%] rounded-t-[4rem] flex flex-col items-center'>
 
       <ToggleButton comparandBase={active} leftComparand={'Expenses'} rightComparand={'Income'} leftText='Expenses' rightText='Income' leftClickHandler={() => setActive('Expenses')} rightClickHandler={() => setActive('Income')} />
 

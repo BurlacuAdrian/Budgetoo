@@ -27,7 +27,7 @@ const getInvitationMailOptions = async (sender, receiver) => {
                 console.error('Error signing JWT token:', err);
                 reject(false);
             } else {
-                const invitationUrl = `${process.env.CORS_ALLOW_ORIGIN}/v1/accept-invite/${token}`;
+                const invitationUrl = `${process.env.API_URL}/v1/accept-invite/${token}`;
 
                 resolve({
                     from: `"Budgetoo" <${process.env.EMAIL_ADDRESS}>`,
@@ -117,55 +117,51 @@ app.get('/v1/accept-invite/:token', async (req, res, next) => {
         const { token } = req.params;
 
         if (!token) {
-            return res.status(401).json({ error: 'Failed to accept invite. Ask it to be resent.' });
+            return res.redirect(`/invite-result?status=failed&reason=missing_token`);
         }
 
         jwt.verify(token, INVITE_SECRET_KEY, {}, async (err, decoded) => {
             if (err || !(decoded && decoded.sender && decoded.receiver)) {
-                return res.status(401).send('Invalid Token');
+                return res.redirect(`/invite-result?status=failed&reason=invalid_token`);
             }
 
             const sender = await Models.User.findOne({ email: decoded.sender });
             const receiver = await Models.User.findOne({ email: decoded.receiver });
 
             if (!sender || !receiver) {
-                return res.status(404).json({ error: 'Sender or receiver not found' });
+                return res.redirect(`/invite-result?status=failed&reason=user_not_found`);
             }
 
-            // Check if the receiver is already part of a family
             const existingFamily = await Models.Family.findOne({ users: receiver._id });
             if (existingFamily) {
-                return res.status(403).json({ error: 'Receiver is already part of another family.' });
+                return res.redirect(`/invite-result?status=failed&reason=already_in_family`);
             }
 
-            // Find the family where the sender is a member
             let family = await Models.Family.findOne({ users: sender._id });
 
             if (family) {
-                // Check if the receiver is already a member (double check, though this should never happen now)
                 if (!family.users.includes(receiver._id)) {
-                    // Add receiver to the family and save
                     family.users.push(receiver._id);
                     await family.save();
                 }
-                return res.status(200).json({ message: 'Invitation accepted.' });
+                return res.redirect(`/invite-result?status=success`);
             }
 
-            // If no family exists, create a new one
             family = await Models.Family.create({
                 users: [sender._id, receiver._id],
                 budgets: {}
             });
 
             console.log(family);
-            return res.status(200).json({ message: 'Invitation accepted.' });
+            return res.redirect(`/invite-result?status=success`);
         });
 
     } catch (error) {
         console.error('Error in /v1/accept-invite route:', error);
-        return res.status(500).json({ error: 'Internal server error' });
+        return res.redirect(`/invite-result?status=failed&reason=internal_error`);
     }
 });
+
 
 app.post('/v1/leave', async (req, res, next) => {
     try {

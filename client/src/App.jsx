@@ -11,6 +11,7 @@ import ProfilePage from './Pages/Profile/ProfilePage'
 import LoginPage from './Pages/Auth/LoginPage'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { DataProvider } from './Pages/Wrappers/DataContext'
+import InviteResult from './Pages/Profile/InviteResult'
 
 function App() {
 
@@ -32,8 +33,7 @@ function App() {
 
               <Route path='/' element={<LoginPage />} />
               <Route path='/login' element={<LoginPage />} />
-
-
+              <Route path='/invite-result' element={<InviteResult/>}/>
             </Routes>
           </div>
         </BrowserRouter>
