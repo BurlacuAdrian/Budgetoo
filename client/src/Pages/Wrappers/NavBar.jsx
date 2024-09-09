@@ -25,7 +25,7 @@ function NavBar() {
       '/', 
       '/invite-result',
       '/loading',
-      '/add'
+      '/add',
     ];
   
     const isHiddenPath = pathsToHide.includes(location.pathname);
@@ -34,7 +34,6 @@ function NavBar() {
   };
 
   useEffect(() => {
-    console.log(location.pathname)
     setIsVisible(getVisibility())
     if(location.pathname=='/add'){
       console
@@ -108,8 +107,8 @@ function NavBar() {
           <span className={getSpanStyle('/home')} >Budget</span>
         </div>
         <div className='flex flex-col items-center w-10 sm:w-16 mx-auto' onClick={handlePaymentsButton}>
-          <img src={getImgStyle('cash', '/payments')} className=''></img>
-          <span className={getSpanStyle('/payments')} >Payments</span>
+          <img src={getImgStyle('exchange', '/payments')} className=''></img>
+          <span className={getSpanStyle('/payments')} >Exchange</span>
         </div>
       </div>
 
@@ -125,8 +124,10 @@ function NavBar() {
 
       <div className=' grid grid-cols-2 gap-4 w-full'>
         <div className='flex flex-col items-center w-10 sm:w-16 mx-auto' onClick={handleInsightsButton}>
-          <img src={getImgStyle('graph', '/insights')} className=''></img>
-          <span className={getSpanStyle('/insights')}>Insights</span>
+          {/* <img src={getImgStyle('graph', '/insights')} className=''></img> */}
+          {/* <span className={getSpanStyle('/insights')}>Insights</span> */}
+          <img src={getImgStyle('info', '/insights')} className=''></img>
+          <span className={getSpanStyle('/insights')}>About</span>
         </div>
         <div className='flex flex-col items-center w-10 sm:w-16 mx-auto' onClick={handleProfileButton}>
           <img src={getImgStyle('profile', '/profile')} className=''></img>
@@ -147,12 +148,14 @@ function NavBar() {
           <span className={getSpanStyle('/home')} >Budget</span>
         </div>
         <div className='flex flex-col items-center' onClick={handlePaymentsButton}>
-          <img src={getImgStyle('cash', '/payments')} className=''></img>
-          <span className={getSpanStyle('/payments')} >Payments</span>
+          <img src={getImgStyle('exchange', '/payments')} className=''></img>
+          <span className={getSpanStyle('/payments')} >Exchange</span>
         </div>
         <div className='flex flex-col items-center' onClick={handleInsightsButton}>
-          <img src={getImgStyle('graph', '/insights')} className=''></img>
-          <span className={getSpanStyle('/insights')}>Insights</span>
+          {/* <img src={getImgStyle('graph', '/insights')} className=''></img>
+          <span className={getSpanStyle('/insights')}>Insights</span> */}
+          <img src={getImgStyle('info', '/insights')} className=''></img>
+          <span className={getSpanStyle('/insights')}>About</span>
         </div>
       </div>
 

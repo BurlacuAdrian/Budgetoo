@@ -14,7 +14,7 @@ const ProfilePage = () => {
 
   if (!dataContext) {
     console.log(dataContext)
-    return <div>Loading hero section...</div>; // TODO some other fallback UI
+    return <div>Loading profile page...</div>; // TODO some other fallback UI
   }
   const { data, setData } = dataContext
 
